@@ -1,0 +1,14 @@
+{
+  "jsonid": "device_manifest",
+  "device": {
+    "driver": "cvdriver",
+    "resources": {
+      "model": "{cvdriver}/rendermodels/cv_controller"
+    },
+    "tracked_controller_role": "right",
+    "render_model": "cv_controller",
+    "controller_type": "cvcontroller",
+    "serial_number": "CV_RIGHT_001",
+    "model_number": "CV Controller MK1"
+  }
+}

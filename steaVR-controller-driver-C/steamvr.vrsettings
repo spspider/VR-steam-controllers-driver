@@ -1,0 +1,9 @@
+{
+   "steamvr" : {
+      "requireHmd" : false,
+      "activateMultipleDrivers" : true,
+      "enableHomeApp" : false,
+      "showConsole" : true,
+      "loglevel" : 1
+   }
+}

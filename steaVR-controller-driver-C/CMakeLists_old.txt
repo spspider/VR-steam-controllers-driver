@@ -1,0 +1,41 @@
+cmake_minimum_required(VERSION 3.10)
+project(cvdriver)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Путь к OpenVR SDK
+set(OPENVR_SDK_PATH "openvr")  # Убедитесь, что это правильный путь
+
+find_library(OPENVR_API openvr_api HINTS "${OPENVR_SDK_PATH}/lib/win64")
+if(NOT OPENVR_API)
+    message(FATAL_ERROR "openvr_api library not found!")
+endif()
+
+include_directories(${OPENVR_SDK_PATH}/headers)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+# Создаем библиотеку драйвера
+add_library(driver_cvdriver SHARED 
+    src/main.cpp
+    src/network_client.cpp
+    src/controller_device.cpp
+)
+
+target_link_libraries(driver_cvdriver ${OPENVR_API} ws2_32)
+
+# Куда копировать
+set(DRIVER_INSTALL_DIR "C:/Program Files (x86)/Steam/steamapps/common/SteamVR/drivers/cvdriver")
+
+# Создаем директории и копируем файлы
+add_custom_command(TARGET driver_cvdriver POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${DRIVER_INSTALL_DIR}/bin/win64"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${DRIVER_INSTALL_DIR}/resources"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${DRIVER_INSTALL_DIR}/drivers/left_controller"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${DRIVER_INSTALL_DIR}/drivers/right_controller"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${DRIVER_INSTALL_DIR}/input"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_FILE:driver_cvdriver>
+        "${DRIVER_INSTALL_DIR}/bin/win64/"
+    COMMENT "Installing driver to SteamVR..."
+)

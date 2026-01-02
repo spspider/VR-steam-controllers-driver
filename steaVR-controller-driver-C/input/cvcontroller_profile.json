@@ -1,0 +1,10 @@
+{
+  "json_id": "input_profile",
+  "controller_type": "cvcontroller",
+  "device_class": "controller",
+  "resource_root": "cvdriver",
+  "driver_name": "cvdriver",
+  "controller_binding": {
+    "binding_url": "cvcontroller_bindings.json"
+  }
+}

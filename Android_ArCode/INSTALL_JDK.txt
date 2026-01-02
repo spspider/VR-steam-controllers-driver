@@ -1,0 +1,44 @@
+ИНСТРУКЦИЯ ПО УСТАНОВКЕ JDK ДЛЯ СБОРКИ ANDROID ПРОЕКТА
+=======================================================
+
+ПРОБЛЕМА: В системе установлен только JRE, а для сборки Android проекта нужен JDK (Java Development Kit).
+
+РЕШЕНИЕ:
+
+1. Скачайте Eclipse Temurin JDK 11:
+   https://adoptium.net/temurin/releases/?version=11
+
+2. Выберите:
+   - Operating System: Windows
+   - Architecture: x64
+   - Package Type: JDK
+   - Формат: .msi (installer) - РЕКОМЕНДУЕТСЯ
+
+3. Установите JDK:
+   - Запустите скачанный .msi файл
+   - Следуйте инструкциям установщика
+   - Убедитесь, что выбрана опция "Add to PATH"
+
+4. Проверьте установку:
+   Откройте новую командную строку и выполните:
+   java -version
+   javac -version
+
+   Должно показать версию 11.x.x
+
+5. Соберите проект:
+   cd Android_ArCode
+   gradlew.bat assembleDebug
+
+АЛЬТЕРНАТИВНЫЙ СПОСОБ (портативная установка):
+
+1. Скачайте .zip версию JDK 11
+2. Распакуйте в C:\Program Files\Java\jdk-11
+3. Добавьте переменные окружения:
+   - JAVA_HOME = C:\Program Files\Java\jdk-11
+   - Добавьте %JAVA_HOME%\bin в PATH
+
+ИСПРАВЛЕННЫЕ ПРОБЛЕМЫ В КОДЕ:
+- Обновлены импорты OpenCV для версии 4.9.0
+- Исправлены методы ArucoDetector и Dictionary
+- Настроена совместимость версий Gradle и AGP

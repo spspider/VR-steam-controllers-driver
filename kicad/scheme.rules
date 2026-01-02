@@ -1,0 +1,100 @@
+
+(rules PCB scheme.dsn
+  (snap_angle 
+    fortyfive_degree
+  )
+  (autoroute_settings
+    (fanout off)
+    (autoroute on)
+    (postroute off)
+    (vias on)
+    (via_costs 50)
+    (plane_via_costs 5)
+    (start_ripup_costs 100)
+    (start_pass_no 1)
+    (layer_rule F.Cu
+      (active on)
+      (preferred_direction vertical)
+      (preferred_direction_trace_costs 1.0)
+      (against_preferred_direction_trace_costs 5.0)
+    )
+    (layer_rule B.Cu
+      (active on)
+      (preferred_direction horizontal)
+      (preferred_direction_trace_costs 1.0)
+      (against_preferred_direction_trace_costs 2.9)
+    )
+  )
+  (rule
+    (width 150.0)
+    (clearance 150.0)
+    (clearance 75.0 (type smd_to_turn_gap))
+    (clearance 37.6 (type smd))
+    (clearance 150.0 (type "kicad_default"))
+    (clearance 150.0 (type "ICM-fine"))
+  )
+  (padstack "Via[0-1]_600:300_um"
+    (shape
+      (circle F.Cu 600.0 0.0 0.0)
+    )
+    (shape
+      (circle B.Cu 600.0 0.0 0.0)
+    )
+    (attach off)
+  )
+  (via 
+    "Via[0-1]_600:300_um" "Via[0-1]_600:300_um" default
+  )
+  (via 
+    "Via[0-1]_600:300_um-kicad_default" "Via[0-1]_600:300_um" "kicad_default"
+  )
+  (via 
+    "Via[0-1]_600:300_um-ICM-fine" "Via[0-1]_600:300_um" "ICM-fine"
+  )
+  (via_rule
+    default "Via[0-1]_600:300_um"
+  )
+  (via_rule
+    "kicad_default" "Via[0-1]_600:300_um-kicad_default"
+  )
+  (via_rule
+    "ICM-fine" "Via[0-1]_600:300_um-ICM-fine"
+  )
+  (class default
+    (clearance_class default)
+    (via_rule default)
+    (rule
+      (width 150.0)
+    )
+    (circuit 
+      (use_layer F.Cu B.Cu)
+    )
+  )
+  (class "kicad_default"
+    +5C "Net-(TP4056-module1-b-)" "/tx-out" "Net-(D1-K)" "/rx-out" "Net-(TP4056-module1-b+)" "Net-(J1-Pin_1)" /tx
+    /SCL /SDA /btnA "/btn_103-530" /btnY /btnB /btnX /analog0
+    /analog1 "Net-(D1-A)" +4.2V "unconnected-(U6-NC-Pad4)" /rx "Net-(Q1-B)" "/led-output" "/aux_cl"
+    "Net-(ICM-conn1-Pin_2)" "/aux-da" "Net-(ICM-conn1-Pin_1)" "Net-(U2-EN)" "Net-(U2-GPIO15)" "Net-(U5-ALERT{slash}RDY)" "Net-(U7-SDO{slash}AD0)" "Net-(SW4-D)"
+    "unconnected-(U1-PadB2B)" "unconnected-(U1-PadB1B)" "unconnected-(U4-NC-Pad4)" "unconnected-(U5-AIN3-Pad7)" "unconnected-(U5-AIN2-Pad6)" "unconnected-(U7-NC-Pad1)" "unconnected-(U7-RESV-Pad19)" "unconnected-(U7-NC-Pad14)"
+    "unconnected-(U7-NC-Pad17)" "unconnected-(U7-NC-Pad6)" "unconnected-(U7-NC-Pad16)" "unconnected-(U7-NC-Pad3)" "unconnected-(U7-NC-Pad2)" "unconnected-(U7-NC-Pad4)" "unconnected-(U7-NC-Pad15)" "unconnected-(U7-NC-Pad5)"
+    (clearance_class "kicad_default")
+    (via_rule "kicad_default")
+    (rule
+      (width 150.0)
+    )
+    (circuit 
+      (use_layer F.Cu B.Cu)
+    )
+  )
+  (class "ICM-fine"
+    +3.3V GND +1.8V "/SCL_1.8" "/SDA_1.8" "Net-(U7-REGOUT)" "Net-(U7-~{CS})"
+    (clearance_class "ICM-fine")
+    (via_rule "ICM-fine")
+    (rule
+      (width 150.0)
+    )
+    (circuit 
+      (use_layer F.Cu B.Cu)
+    )
+  )
+)
