@@ -14,5 +14,5 @@
 .cxx
 local.properties
 opencv/
-.idea/
+/.idea/
 **/*.zip

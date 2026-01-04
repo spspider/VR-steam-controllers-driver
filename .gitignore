@@ -1,3 +1,6 @@
 build/
 .venv/
 **/scheme-backups/
+**/openvr/
+**/build/
+**/.venv/

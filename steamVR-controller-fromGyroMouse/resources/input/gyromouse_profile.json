@@ -1,0 +1,34 @@
+{
+  "jsonid": "input_profile",
+  "controller_type": "gyromousecontroller",
+  "revisions": {
+    "0": {
+      "name": "GyroMouse Controller",
+      "description": "GyroMouse Controller Profile",
+      "steamvr_controllervr_json_version": 2,
+      "controller_type": "gyromousecontroller",
+      "input_source_definitions": [
+        {
+          "name": "/input/system",
+          "paths": ["/user/hand/left/input/system", "/user/hand/right/input/system"],
+          "input_source_type": "button"
+        },
+        {
+          "name": "/input/application_menu",
+          "paths": ["/user/hand/left/input/application_menu", "/user/hand/right/input/application_menu"],
+          "input_source_type": "button"
+        },
+        {
+          "name": "/input/grip",
+          "paths": ["/user/hand/left/input/grip", "/user/hand/right/input/grip"],
+          "input_source_type": "button"
+        },
+        {
+          "name": "/input/trigger",
+          "paths": ["/user/hand/left/input/trigger", "/user/hand/right/input/trigger"],
+          "input_source_type": "button"
+        }
+      ]
+    }
+  }
+}

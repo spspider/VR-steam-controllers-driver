@@ -293,26 +293,56 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun chooseOptimalSize(choices: Array<Size>, width: Int, height: Int): Size {
-        // Выбираем размер 640x480 для быстрой обработки
-        val targetSize = Size(640, 480)
-
-        for (size in choices) {
-            if (size.width == targetSize.width && size.height == targetSize.height) {
-                return size
+        // Выбираем размер с правильным соотношением сторон
+        val targetRatio = width.toDouble() / height.toDouble()
+        
+        // Ищем размер близкий к 640x480 с правильным соотношением
+        val preferredSizes = listOf(
+            Size(640, 480),
+            Size(800, 600),
+            Size(1024, 768),
+            Size(1280, 960)
+        )
+        
+        for (preferredSize in preferredSizes) {
+            for (size in choices) {
+                if (size.width == preferredSize.width && size.height == preferredSize.height) {
+                    return size
+                }
             }
         }
-
-        // Если точного совпадения нет, выбираем первый доступный размер
-        return choices.firstOrNull() ?: Size(640, 480)
+        
+        // Если точного совпадения нет, выбираем размер с близким соотношением сторон
+        var bestSize = choices[0]
+        var minRatioDiff = Double.MAX_VALUE
+        
+        for (size in choices) {
+            val ratio = size.width.toDouble() / size.height.toDouble()
+            val ratioDiff = Math.abs(ratio - targetRatio)
+            if (ratioDiff < minRatioDiff) {
+                minRatioDiff = ratioDiff
+                bestSize = size
+            }
+        }
+        
+        return bestSize
     }
 
     private fun createCameraPreviewSession() {
         try {
             val texture = textureView.surfaceTexture
-            texture?.setDefaultBufferSize(textureView.width, textureView.height)
-
+            
+            // Получаем размер камеры
+            val cameraManager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
+            val cameraId = cameraManager.cameraIdList[0]
+            val characteristics = cameraManager.getCameraCharacteristics(cameraId)
+            val map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
+            val previewSize = chooseOptimalSize(map!!.getOutputSizes(SurfaceTexture::class.java), textureView.width, textureView.height)
+            
+            // Устанавливаем правильный размер для TextureView
+            texture?.setDefaultBufferSize(previewSize.width, previewSize.height)
+            
             val surface = Surface(texture)
-
             val targets = listOf(surface, imageReader?.surface)
 
             cameraDevice?.createCaptureSession(

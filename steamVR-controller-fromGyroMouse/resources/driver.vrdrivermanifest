@@ -1,0 +1,7 @@
+{
+  "alwaysActivate": true,
+  "enable": true,
+  "name": "gyromouse",
+  "directory": "gyromouse",
+  "resourceOnly": false
+}
