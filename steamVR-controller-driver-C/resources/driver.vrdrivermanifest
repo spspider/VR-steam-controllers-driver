@@ -2,5 +2,19 @@
   "alwaysActivate": true,
   "name": "cvdriver",
   "directory": "",
-  "resourceOnly": false
+  "resourceOnly": false,
+  "hmd_presence": [],
+  "driver": [
+    {
+      "name": "cvdriver",
+      "type": "tracked_device",
+      "manufacturer": "CVDriver",
+      "model_number": "CV_Controller_MK1",
+      "serial_number": "CV_DRIVER_001",
+      "tracked_device_class": "controller",
+      "hmd_type": "",
+      "vr_mode": "standing",
+      "lighthouse": false
+    }
+  ]
 }

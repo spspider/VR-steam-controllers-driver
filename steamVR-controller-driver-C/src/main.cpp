@@ -16,41 +16,49 @@ public:
         Cleanup();
     }
     
-    // ==== IServerTrackedDeviceProvider ====
     virtual vr::EVRInitError Init(vr::IVRDriverContext* pDriverContext) override {
         VR_INIT_SERVER_DRIVER_CONTEXT(pDriverContext);
         
-        VRDriverLog()->Log("=== CVDriver v2.0 INIT START ===");
+        VRDriverLog()->Log("=== CVDriver v2.1 INIT START ===");
         
-        // Создаем контроллеры
+        // Create controllers
         m_leftController = std::make_unique<CVController>(
             TrackedControllerRole_LeftHand, 0);
         m_rightController = std::make_unique<CVController>(
             TrackedControllerRole_RightHand, 1);
         
-        // Регистрируем контроллеры в SteamVR
-        VRServerDriverHost()->TrackedDeviceAdded(
+        // Register controllers with SteamVR
+        bool leftAdded = VRServerDriverHost()->TrackedDeviceAdded(
             "CV_Controller_Left", 
             TrackedDeviceClass_Controller, 
             m_leftController.get());
         
-        VRServerDriverHost()->TrackedDeviceAdded(
+        bool rightAdded = VRServerDriverHost()->TrackedDeviceAdded(
             "CV_Controller_Right", 
             TrackedDeviceClass_Controller, 
             m_rightController.get());
         
-        // Запускаем сетевой клиент
+        if (!leftAdded || !rightAdded) {
+            VRDriverLog()->Log("CVDriver: Failed to add controllers!");
+            return VRInitError_Init_Internal;
+        }
+        
+        VRDriverLog()->Log("CVDriver: Controllers registered successfully");
+        
+        // Start network client
         m_networkClient = std::make_unique<NetworkClient>(5555);
         if (!m_networkClient->Start()) {
             VRDriverLog()->Log("CVDriver: Failed to start network client!");
             return VRInitError_Init_Internal;
         }
         
-        // Запускаем поток для получения данных
+        VRDriverLog()->Log("CVDriver: Network client started on port 5555");
+        
+        // Start network thread
         m_running = true;
         m_networkThread = std::thread(&CVDriver::NetworkThread, this);
         
-        VRDriverLog()->Log("=== CVDriver v2.0 INIT SUCCESS ===");
+        VRDriverLog()->Log("=== CVDriver v2.1 INIT SUCCESS ===");
         return VRInitError_None;
     }
     
@@ -66,6 +74,8 @@ public:
             m_networkClient->Stop();
             m_networkClient.reset();
         }
+        
+        VRDriverLog()->Log("CVDriver: Cleanup complete");
     }
     
     virtual const char* const* GetInterfaceVersions() override {
@@ -73,9 +83,17 @@ public:
     }
     
     virtual void RunFrame() override {
-        // Вызывается каждый кадр SteamVR
-        if (m_leftController) m_leftController->CheckConnection();
-        if (m_rightController) m_rightController->CheckConnection();
+        // CRITICAL: This is called every frame by SteamVR
+        // We must update controller poses here!
+        if (m_leftController) {
+            m_leftController->CheckConnection();
+            m_leftController->RunFrame();
+        }
+        
+        if (m_rightController) {
+            m_rightController->CheckConnection();
+            m_rightController->RunFrame();
+        }
     }
     
     virtual bool ShouldBlockStandbyMode() override { return false; }
@@ -91,16 +109,18 @@ private:
         
         while (m_running) {
             if (m_networkClient && m_networkClient->Receive(data)) {
-                // Логируем только каждые 1000 пакетов
+                // Log every 1000 packets
                 if (logCounter % 1000 == 0) {
                     char logMsg[256];
-                    sprintf_s(logMsg, "CVDriver: Received 1000 packets, last: controller %d, packet %u", 
-                             (int)data.controller_id, data.packet_number);
+                    snprintf(logMsg, sizeof(logMsg), 
+                        "CVDriver: Packet %u from controller %d - Quat(%.2f,%.2f,%.2f,%.2f)", 
+                        data.packet_number, (int)data.controller_id,
+                        data.quat_w, data.quat_x, data.quat_y, data.quat_z);
                     VRDriverLog()->Log(logMsg);
                 }
                 logCounter++;
                 
-                // Обновляем соответствующий контроллер
+                // Update corresponding controller
                 if (data.controller_id == 0 && m_leftController) {
                     m_leftController->UpdateFromArduino(data);
                 } 
@@ -109,7 +129,8 @@ private:
                 }
             }
             
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            // Small sleep to avoid CPU spinning
+            std::this_thread::sleep_for(std::chrono::microseconds(100));
         }
         
         VRDriverLog()->Log("CVDriver: Network thread stopped.");
@@ -122,22 +143,19 @@ private:
     std::atomic<bool> m_running{false};
 };
 
-// Глобальные переменные для экспорта функций
+// Global driver instance
 CVDriver g_driver;
 
 extern "C" __declspec(dllexport) void* HmdDriverFactory(
     const char* pInterfaceName, int* pReturnCode) {
     
     if (strcmp(pInterfaceName, IServerTrackedDeviceProvider_Version) == 0) {
-        return &g_driver;
-    }
-    
-    if (strcmp(pInterfaceName, vr::IServerTrackedDeviceProvider_Version) == 0) {
+        if (pReturnCode) *pReturnCode = VRInitError_None;
         return &g_driver;
     }
     
     if (pReturnCode) {
-        *pReturnCode = vr::VRInitError_Init_InterfaceNotFound;
+        *pReturnCode = VRInitError_Init_InterfaceNotFound;
     }
     return nullptr;
 }

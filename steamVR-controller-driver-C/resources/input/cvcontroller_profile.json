@@ -1,0 +1,27 @@
+{
+  "jsonid": "input_profile",
+  "controller_type": "vive_controller",
+  "input_bindingui_mode": "controller_handed",
+  "input_source": {
+    "/input/trigger": {
+      "type": "trigger",
+      "binding_image_point": [50, 50],
+      "order": 1
+    },
+    "/input/grip": {
+      "type": "button",
+      "binding_image_point": [30, 70],
+      "order": 2
+    },
+    "/input/application_menu": {
+      "type": "button",
+      "binding_image_point": [50, 30],
+      "order": 3
+    },
+    "/input/system": {
+      "type": "button",
+      "binding_image_point": [50, 10],
+      "order": 4
+    }
+  }
+}
