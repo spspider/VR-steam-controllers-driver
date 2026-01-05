@@ -73,8 +73,8 @@
   (class "kicad_default"
     +5C "Net-(TP4056-module1-b-)" "/tx-out" "Net-(D1-K)" "/rx-out" "Net-(TP4056-module1-b+)" "Net-(J1-Pin_1)" /tx
     /SCL /SDA /btnA "/btn_103-530" /btnY /btnB /btnX /analog0
-    /analog1 "Net-(D1-A)" +4.2V "unconnected-(U6-NC-Pad4)" /rx "Net-(Q1-B)" "/led-output" "/aux_cl"
-    "Net-(ICM-conn1-Pin_2)" "/aux-da" "Net-(ICM-conn1-Pin_1)" "Net-(U2-EN)" "Net-(U2-GPIO15)" "Net-(U5-ALERT{slash}RDY)" "Net-(U7-SDO{slash}AD0)" "Net-(SW4-D)"
+    /analog1 "Net-(D1-A)" +4.2V "unconnected-(U6-NC-Pad4)" /rx "Net-(Q1-B)" "/led-output" "unconnected-(U7-AUX_DA-Pad21)"
+    "unconnected-(U7-AUX_CL-Pad7)" "unconnected-(U7-FSYNC-Pad11)" "unconnected-(U7-INT1-Pad12)" "Net-(U2-EN)" "Net-(U2-GPIO15)" "Net-(U5-ALERT{slash}RDY)" "Net-(U7-SDO{slash}AD0)" "Net-(SW4-D)"
     "unconnected-(U1-PadB2B)" "unconnected-(U1-PadB1B)" "unconnected-(U4-NC-Pad4)" "unconnected-(U5-AIN3-Pad7)" "unconnected-(U5-AIN2-Pad6)" "unconnected-(U7-NC-Pad1)" "unconnected-(U7-RESV-Pad19)" "unconnected-(U7-NC-Pad14)"
     "unconnected-(U7-NC-Pad17)" "unconnected-(U7-NC-Pad6)" "unconnected-(U7-NC-Pad16)" "unconnected-(U7-NC-Pad3)" "unconnected-(U7-NC-Pad2)" "unconnected-(U7-NC-Pad4)" "unconnected-(U7-NC-Pad15)" "unconnected-(U7-NC-Pad5)"
     (clearance_class "kicad_default")
@@ -87,7 +87,7 @@
     )
   )
   (class "ICM-fine"
-    +3.3V GND +1.8V "/SCL_1.8" "/SDA_1.8" "Net-(U7-REGOUT)" "Net-(U7-~{CS})"
+    GND +3.3V +1.8V "/SCL_1.8" "/SDA_1.8" "Net-(U7-REGOUT)" "Net-(U7-~{CS})"
     (clearance_class "ICM-fine")
     (via_rule "ICM-fine")
     (rule
