@@ -1,4 +1,4 @@
-23677087692670600
+23685925762003722
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -96593,6 +96593,13 @@ module-custom-for-esp8266
 3
 3
 module-custom-for-esp8266
+BAT_BK-18650-PC2-battery-holder
+
+
+0
+2
+2
+module-custom-for-esp8266
 ESP-12E_no_pins
 Wi-Fi Module, http://wiki.ai-thinker.com/_media/esp8266/docs/aithinker_esp_12f_datasheet_en.pdf
 Wi-Fi Module
@@ -96649,12 +96656,33 @@ MMDT4413-7-F
 6
 6
 module-custom-for-esp8266
+SOT25
+
+
+0
+5
+5
+module-custom-for-esp8266
 SW_PUSH_6mm_H4.3mm
 tactile push button, 6x6mm e.g. PHAP33xx series, height=4.3mm
 tact sw push 6mm
 0
 4
 2
+module-custom-for-esp8266
+SW_SLW-883935-2A-D
+
+
+0
+3
+3
+module-custom-for-esp8266
+TP4056-Module
+
+
+0
+6
+6
 module-custom-for-esp8266
 TSOP18XX
 
@@ -96669,6 +96697,13 @@ IR Receiver Vishay TSOP-xxxx MINIMOLD
 0
 3
 3
+module-custom-for-esp8266
+XDCR_COM-09032-103-530
+
+
+0
+14
+11
 module-custom-for-esp8266
 XL4015_Converter
 
