@@ -2,79 +2,57 @@
 #include "driver.h"
 #include <cmath>
 #include <iostream>
-#include <chrono>
-#include <mutex>
 
 using namespace vr;
 
 GyroMouseController::GyroMouseController(vr::ETrackedControllerRole role, uint8_t expected_id)
     : m_role(role), m_expectedControllerId(expected_id),
-      m_unObjectId(vr::k_unTrackedDeviceIndexInvalid), m_ulPropertyContainer(vr::k_ulInvalidPropertyContainer) {
+      m_unObjectId(vr::k_unTrackedDeviceIndexInvalid), m_ulPropertyContainer(0) {
 
     memset(&m_pose, 0, sizeof(m_pose));
     m_pose.poseIsValid = true;
     m_pose.result = TrackingResult_Running_OK;
     m_pose.deviceIsConnected = true;
-    m_pose.willDriftInYaw = false;
-    m_pose.shouldApplyHeadModel = false;
-    
-    // ВАЖНО: Устанавливаем тип устройства
-    m_pose.deviceIsConnected = true;
+
     m_pose.qWorldFromDriverRotation = {1, 0, 0, 0};
     m_pose.qDriverFromHeadRotation = {1, 0, 0, 0};
 
-    // Фиксированная позиция перед игроком
-    // SteamVR использует правую систему координат:
-    // X - вправо, Y - вверх, Z - вперед
-    if (role == TrackedControllerRole_LeftHand) {
-        m_pose.vecPosition[0] = -0.3f;  // Левее (отрицательное X)
-        m_pose.vecPosition[1] = 0.0f;   // На уровне пояса
-        m_pose.vecPosition[2] = -0.5f;  // Перед игроком (отрицательное Z в SteamVR)
-    } else {
-        m_pose.vecPosition[0] = 0.3f;   // Правее (положительное X)
-        m_pose.vecPosition[1] = 0.0f;   // На уровне пояса
-        m_pose.vecPosition[2] = -0.5f;  // Перед игроком
-    }
+    // Начальная позиция (будет обновлена из ArUco)
+    m_pose.vecPosition[0] = (role == TrackedControllerRole_LeftHand) ? -0.2f : 0.2f;
+    m_pose.vecPosition[1] = 1.0f;
+    m_pose.vecPosition[2] = -0.3f;
 
-    m_pose.qRotation = {1, 0, 0, 0};  // Без вращения
-    
-    // Устанавливаем скорость и угловую скорость в 0
-    m_pose.vecVelocity[0] = 0;
-    m_pose.vecVelocity[1] = 0;
-    m_pose.vecVelocity[2] = 0;
-    
-    m_pose.vecAngularVelocity[0] = 0;
-    m_pose.vecAngularVelocity[1] = 0;
-    m_pose.vecAngularVelocity[2] = 0;
+    m_pose.qRotation = {1, 0, 0, 0};
 
     m_lastUpdateTime = std::chrono::steady_clock::now();
+
+    // Инициализируем хендлы компонентов ввода
+    memset(m_inputComponentHandles, 0, sizeof(m_inputComponentHandles));
 }
 
 vr::EVRInitError GyroMouseController::Activate(uint32_t unObjectId) {
-    VRDriverLog()->Log("GyroMouseController: Activate called for controller");
+    VRDriverLog()->Log("GyroMouseController: Activate called!");
 
     m_unObjectId = unObjectId;
     m_ulPropertyContainer = VRProperties()->TrackedDeviceToPropertyContainer(unObjectId);
 
-    // Устанавливаем обязательные свойства
+    // Основные свойства
     VRProperties()->SetStringProperty(m_ulPropertyContainer,
         Prop_ModelNumber_String, "GyroMouse_Controller_MK1");
+
     VRProperties()->SetStringProperty(m_ulPropertyContainer,
-        Prop_RenderModelName_String, "{gyromouse}/rendermodels/gyromouse_controller");
-    
+        Prop_SerialNumber_String,
+        m_role == TrackedControllerRole_LeftHand ? "GYROMOUSE_LEFT_001" : "GYROMOUSE_RIGHT_001");
+
+    // Используем модель контроллера Vive как временную
     VRProperties()->SetStringProperty(m_ulPropertyContainer,
-        Prop_TrackingSystemName_String, "gyromouse");
+        Prop_RenderModelName_String, "vr_controller_vive_1_5");
+
     VRProperties()->SetStringProperty(m_ulPropertyContainer,
-        Prop_ManufacturerName_String, "GyroMouse Inc");
-    
-    // Устанавливаем серийный номер в зависимости от роли
-    if (m_role == TrackedControllerRole_LeftHand) {
-        VRProperties()->SetStringProperty(m_ulPropertyContainer,
-            Prop_SerialNumber_String, "GYROMOUSE_LEFT_001");
-    } else {
-        VRProperties()->SetStringProperty(m_ulPropertyContainer,
-            Prop_SerialNumber_String, "GYROMOUSE_RIGHT_001");
-    }
+        Prop_ManufacturerName_String, "GyroMouse");
+
+    VRProperties()->SetStringProperty(m_ulPropertyContainer,
+        Prop_TrackingSystemName_String, "gyromouse_aruco");
 
     VRProperties()->SetUint64Property(m_ulPropertyContainer,
         Prop_CurrentUniverseId_Uint64, 2);
@@ -83,27 +61,28 @@ vr::EVRInitError GyroMouseController::Activate(uint32_t unObjectId) {
         Prop_ControllerRoleHint_Int32, m_role);
 
     VRProperties()->SetStringProperty(m_ulPropertyContainer,
-        Prop_ControllerType_String, "gyromousecontroller");
+        Prop_ControllerType_String, "vive_controller");
 
     VRProperties()->SetStringProperty(m_ulPropertyContainer,
         Prop_InputProfilePath_String, "{gyromouse}/input/gyromouse_profile.json");
 
-    // ВАЖНО: Регистрируем компоненты ввода
-    VRDriverInput()->CreateBooleanComponent(m_ulPropertyContainer, "/input/system/click", &m_components.systemButton);
-    VRDriverInput()->CreateBooleanComponent(m_ulPropertyContainer, "/input/application_menu/click", &m_components.applicationMenu);
-    VRDriverInput()->CreateBooleanComponent(m_ulPropertyContainer, "/input/grip/click", &m_components.grip);
-    VRDriverInput()->CreateBooleanComponent(m_ulPropertyContainer, "/input/trigger/click", &m_components.trigger);
-    
-    // Создаем компонент для трекинга позы
-    VRDriverInput()->CreateSkeletonComponent(m_ulPropertyContainer, 
-        "/input/skeleton/left", 
-        "/skeleton/hand/left", 
-        "/skeleton/hand/left", 
-        vr::VRSkeletalTracking_Partial,
-        nullptr, 0, 
-        &m_components.skeleton);
+    VRProperties()->SetInt32Property(m_ulPropertyContainer,
+        Prop_DeviceClass_Int32, TrackedDeviceClass_Controller);
 
-    VRDriverLog()->Log("GyroMouseController: Activate completed for controller");
+    // Создаем компоненты ввода
+    VRDriverInput()->CreateBooleanComponent(m_ulPropertyContainer,
+        "/input/trigger/click", &m_inputComponentHandles[0]);
+
+    VRDriverInput()->CreateBooleanComponent(m_ulPropertyContainer,
+        "/input/grip/click", &m_inputComponentHandles[1]);
+
+    VRDriverInput()->CreateBooleanComponent(m_ulPropertyContainer,
+        "/input/application_menu/click", &m_inputComponentHandles[2]);
+
+    VRDriverInput()->CreateBooleanComponent(m_ulPropertyContainer,
+        "/input/system/click", &m_inputComponentHandles[3]);
+
+    VRDriverLog()->Log("GyroMouseController: Activate completed successfully!");
     return VRInitError_None;
 }
 
@@ -126,14 +105,15 @@ void GyroMouseController::DebugRequest(const char* pchRequest, char* pchResponse
 
 vr::DriverPose_t GyroMouseController::GetPose() {
     std::lock_guard<std::mutex> lock(m_poseMutex);
-    
-    // Обновляем временную метку
-    auto now = std::chrono::steady_clock::now();
-    auto duration = now.time_since_epoch();
-    auto nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(duration);
-    m_pose.poseTimeOffset = 0; // Используем текущее время
-    
     return m_pose;
+}
+
+void GyroMouseController::RunFrame() {
+    // КРИТИЧЕСКИ ВАЖНО! Отправляем обновления позы в SteamVR каждый кадр
+    if (m_unObjectId != vr::k_unTrackedDeviceIndexInvalid) {
+        std::lock_guard<std::mutex> lock(m_poseMutex);
+        VRServerDriverHost()->TrackedDevicePoseUpdated(m_unObjectId, m_pose, sizeof(DriverPose_t));
+    }
 }
 
 void GyroMouseController::UpdateFromMouse(const MouseControllerData& data) {
@@ -144,13 +124,17 @@ void GyroMouseController::UpdateFromMouse(const MouseControllerData& data) {
     {
         std::lock_guard<std::mutex> lock(m_poseMutex);
 
-        // Обновляем ориентацию из гироскопа
+        // Обновляем ориентацию из гироскопа мыши
         m_pose.qRotation.w = data.quat_w;
         m_pose.qRotation.x = data.quat_x;
         m_pose.qRotation.y = data.quat_y;
         m_pose.qRotation.z = data.quat_z;
 
-        // Позиция остается фиксированной для дебага
+        // ВАЖНО: Обновляем позицию из ArUco tracking
+        m_pose.vecPosition[0] = data.pos_x;
+        m_pose.vecPosition[1] = data.pos_y;
+        m_pose.vecPosition[2] = data.pos_z;
+
         // Обновляем угловую скорость
         m_pose.vecAngularVelocity[0] = data.gyro_x;
         m_pose.vecAngularVelocity[1] = data.gyro_y;
@@ -175,28 +159,29 @@ void GyroMouseController::CheckConnection() {
         std::lock_guard<std::mutex> lock(m_poseMutex);
         m_pose.deviceIsConnected = false;
         m_pose.poseIsValid = false;
-    } else {
-        std::lock_guard<std::mutex> lock(m_poseMutex);
-        m_pose.deviceIsConnected = true;
-        m_pose.poseIsValid = true;
     }
 }
 
 void GyroMouseController::UpdateButtonState(uint16_t buttons) {
-    // Обновляем состояние кнопок через VRDriverInput
-    if (m_components.systemButton != vr::k_ulInvalidInputComponentHandle) {
-        VRDriverInput()->UpdateBooleanComponent(m_components.systemButton, (buttons & 0x08) != 0, 0);
+    if (m_unObjectId == vr::k_unTrackedDeviceIndexInvalid) {
+        return;
     }
-    
-    if (m_components.applicationMenu != vr::k_ulInvalidInputComponentHandle) {
-        VRDriverInput()->UpdateBooleanComponent(m_components.applicationMenu, (buttons & 0x04) != 0, 0);
-    }
-    
-    if (m_components.grip != vr::k_ulInvalidInputComponentHandle) {
-        VRDriverInput()->UpdateBooleanComponent(m_components.grip, (buttons & 0x02) != 0, 0);
-    }
-    
-    if (m_components.trigger != vr::k_ulInvalidInputComponentHandle) {
-        VRDriverInput()->UpdateBooleanComponent(m_components.trigger, (buttons & 0x01) != 0, 0);
-    }
+
+    // Кнопки мыши:
+    // 0x01 = левая кнопка (trigger)
+    // 0x02 = правая кнопка (grip)
+    // 0x04 = средняя кнопка (application menu)
+    // 0x08 = боковая кнопка (system)
+
+    VRDriverInput()->UpdateBooleanComponent(m_inputComponentHandles[0],
+        (buttons & 0x01) != 0, 0);
+
+    VRDriverInput()->UpdateBooleanComponent(m_inputComponentHandles[1],
+        (buttons & 0x02) != 0, 0);
+
+    VRDriverInput()->UpdateBooleanComponent(m_inputComponentHandles[2],
+        (buttons & 0x04) != 0, 0);
+
+    VRDriverInput()->UpdateBooleanComponent(m_inputComponentHandles[3],
+        (buttons & 0x08) != 0, 0);
 }

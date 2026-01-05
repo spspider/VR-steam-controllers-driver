@@ -23,148 +23,195 @@ cvdriver/
 └── simple_simulator.py
 ```
 
-## Step-by-Step Installation
+### Шаг 2: Установите драйвер вручную
 
-### 1. Download OpenVR SDK
+1. Сохраните `manual_install.bat` в корень проекта
+2. **Запустите от имени администратора** (правой кнопкой → "Запуск от имени администратора")
+3. Скрипт автоматически скопирует все файлы
 
-1. Download OpenVR from: https://github.com/ValveSoftware/openvr
-2. Extract it to `cvdriver/openvr/`
-3. Ensure you have:
-   - `openvr/headers/openvr_driver.h`
-   - `openvr/lib/win64/openvr_api.lib`
-   - `openvr/bin/win64/openvr_api.dll`
+### Шаг 3: Проверьте установку
 
-### 2. Build the Driver
+1. Запустите `check_installation.bat`
+2. Убедитесь что все 4 файла на месте:
+   - ✅ `driver_cvdriver.dll`
+   - ✅ `openvr_api.dll`
+   - ✅ `driver.vrdrivermanifest`
+   - ✅ `cvcontroller_profile.json`
+
+### Шаг 4: Зарегистрируйте драйвер в SteamVR
+
+**Метод 1: Через openvrpaths.vrpath (РЕКОМЕНДУЕТСЯ)**
+
+1. Откройте файл:
+   ```
+   C:\Users\<ВашеИмя>\AppData\Local\openvr\openvrpaths.vrpath
+   ```
+
+2. Добавьте путь к драйверу в секцию `external_drivers`:
+   ```json
+   {
+     "external_drivers": [
+       "C:\\Program Files (x86)\\Steam\\steamapps\\common\\SteamVR\\drivers\\cvdriver"
+     ]
+   }
+   ```
+
+**Метод 2: Через vrpathreg (если есть)**
 
 ```bash
-mkdir build
-cd build
-cmake ..
-cmake --build . --config Release
+"C:\Program Files (x86)\Steam\steamapps\common\SteamVR\bin\win64\vrpathreg.exe" adddriver "C:\Program Files (x86)\Steam\steamapps\common\SteamVR\drivers\cvdriver"
 ```
 
-This will automatically:
-- Compile the driver
-- Copy files to `C:/Program Files (x86)/Steam/steamapps/common/SteamVR/drivers/cvdriver/`
+### Шаг 5: Создайте default.vrsettings
 
-### 3. Verify Installation
-
-Check that these files exist:
+Создайте файл:
 ```
-SteamVR/drivers/cvdriver/
-├── bin/win64/
-│   ├── driver_cvdriver.dll
-│   └── openvr_api.dll
-└── resources/
-    ├── driver.vrdrivermanifest
-    └── input/
-        └── cvcontroller_profile.json
+C:\Program Files (x86)\Steam\steamapps\common\SteamVR\drivers\cvdriver\resources\settings\default.vrsettings
 ```
 
-### 4. Enable the Driver in SteamVR
-
-**Option A: Manual Registration**
-1. Open `SteamVR Settings` → `Developer`
-2. Click `Add Driver`
-3. Navigate to `C:/Program Files (x86)/Steam/steamapps/common/SteamVR/drivers/cvdriver`
-4. Select the folder
-
-**Option B: Edit steamvr.vrsettings**
-1. Close SteamVR completely
-2. Open: `C:/Program Files (x86)/Steam/config/steamvr.vrsettings`
-3. Add to the file:
+Содержимое:
 ```json
 {
-  "driver_cvdriver": {
-    "enable": true,
-    "blocked_by_safe_mode": false
-  },
-  "steamvr": {
-    "activateMultipleDrivers": true
-  }
+   "driver_cvdriver": {
+      "enable": true,
+      "blocked_by_safe_mode": false
+   }
 }
 ```
 
-### 5. Test with Simulator
+### Шаг 6: Запустите симулятор
 
-1. Install Python 3 if you don't have it
-2. Run the simulator:
 ```bash
 python simple_simulator.py
 ```
 
-3. Start SteamVR
-4. Check SteamVR System → Devices - you should see two controllers appear!
-
-### 6. Check Logs
-
-If controllers don't appear, check logs:
+Вы должны увидеть:
 ```
-C:/Program Files (x86)/Steam/logs/vrserver.txt
+Starting simple controller simulator on 127.0.0.1:5555
+Simulating 2 controllers with rotating motion and button presses
+Packet 0: Controllers active, time: 0.0s
+Packet 2: Controllers active, time: 0.0s
 ```
 
-Look for:
-- `CVDriver v2.1 INIT START`
-- `Controllers registered successfully`
-- `Network client started on port 5555`
-- `Received 1000 packets`
+### Шаг 7: Запустите SteamVR
 
-## Troubleshooting
+1. Запустите SteamVR
+2. Откройте **SteamVR Status** (значок в трее)
+3. Нажмите на **☰** → **Devices** → **Manage Vive Controllers**
+4. Вы должны увидеть **2 контроллера** - CV_Controller_Left и CV_Controller_Right
 
-### Controllers appear gray/inactive
-- **Fixed!** The new code includes `RunFrame()` which pushes pose updates every frame
-- Verify the simulator is running and sending data
-- Check that firewall isn't blocking port 5555
+## Проверка логов
 
-### Controllers don't show up at all
-1. Make sure `driver.vrdrivermanifest` is in the resources folder
-2. Verify the driver is enabled in SteamVR settings
-3. Try restarting SteamVR completely (close all SteamVR processes)
-4. Check if other drivers are conflicting
+Если контроллеры не появились, проверьте логи:
 
-### Buttons don't work
-- The input profile should be automatically loaded
-- Try binding controls in SteamVR Settings → Controllers → Manage Controller Bindings
+```
+C:\Program Files (x86)\Steam\logs\vrserver.txt
+```
 
-### Network data not received
-- Check Windows Firewall settings for UDP port 5555
-- Verify simulator is sending to 127.0.0.1:5555
-- Check vrserver logs for "Network client started"
+Ищите строки:
+```
+[CVDriver] === CVDriver v2.1 INIT START ===
+[CVDriver] Controllers registered successfully
+[CVDriver] Network client started on port 5555
+[CVDriver] Packet 1000 from controller 0 - Quat(...)
+```
 
-## Key Changes Made
+## Отладка проблем
 
-1. **Added `RunFrame()` method** - This pushes pose updates to SteamVR every frame (was missing!)
-2. **Proper input component creation** - Using VRDriverInput API correctly
-3. **Fixed property setup** - Added all required controller properties
-4. **Better error handling** - More detailed logging
-5. **Input profile** - Created proper JSON profile for controller bindings
+### Проблема: "Driver not loaded"
 
-## Using with ALVR
+**Решение:**
+1. Проверьте что `driver.vrdrivermanifest` находится в `resources/`
+2. Проверьте `openvrpaths.vrpath` - путь должен быть правильным
+3. Перезапустите SteamVR
 
-To use these controllers with ALVR:
-1. Make sure ALVR is installed and working
-2. The controllers should appear automatically in VR
-3. ALVR will handle the HMD tracking
-4. Your custom controllers will handle hand tracking
+### Проблема: Контроллеры серые/неактивные
 
-## Testing Movement
+**Решение:**
+1. Убедитесь что симулятор запущен и отправляет данные
+2. Проверьте что порт 5555 не заблокирован фаерволом
+3. Посмотрите логи - должны быть сообщения о получении пакетов
 
-The simulator creates rotating motion and button presses:
-- Controllers rotate around Y axis
-- Buttons cycle every 2 seconds
-- Trigger values oscillate
-- Position updates based on accelerometer simulation
+### Проблема: Контроллеры не двигаются
 
-You should see the controllers moving in SteamVR's device view!
+**Решение:**
+1. Код должен быть обновлен - проверьте что есть метод `RunFrame()`
+2. В логах должны быть сообщения каждые 1000 пакетов
+3. Попробуйте перезапустить SteamVR
 
-## Next Steps
+### Проблема: Firewall блокирует порт 5555
 
-1. Replace the simulator with your real Arduino code
-2. Adjust the quaternion mapping if the rotation feels wrong
-3. Calibrate the accelerometer data for position tracking
-4. Add more button inputs if needed
-5. Create custom render models (optional)
+**Решение:**
+```powershell
+# Запустите PowerShell от имени администратора
+New-NetFirewallRule -DisplayName "CVDriver UDP 5555" -Direction Inbound -Protocol UDP -LocalPort 5555 -Action Allow
+```
 
+## Структура папки драйвера
+
+После установки структура должна быть такой:
+
+```
+C:\Program Files (x86)\Steam\steamapps\common\SteamVR\drivers\cvdriver\
+├── bin\
+│   └── win64\
+│       ├── driver_cvdriver.dll         ← Ваш драйвер
+│       └── openvr_api.dll              ← OpenVR API
+└── resources\
+    ├── driver.vrdrivermanifest         ← Манифест драйвера
+    ├── input\
+    │   └── cvcontroller_profile.json   ← Профиль ввода
+    └── settings\
+        └── default.vrsettings          ← Настройки (опционально)
+```
+
+## Следующие шаги
+
+После успешной установки:
+
+1. ✅ Контроллеры должны появиться в SteamVR
+2. ✅ Они должны вращаться (симулятор)
+3. ✅ Кнопки должны мигать (симулятор)
+4. ✅ В логах должны быть сообщения о получении данных
+
+Теперь можно:
+- Подключить реальный Arduino контроллер
+- Настроить калибровку
+- Добавить больше кнопок
+- Создать свою 3D модель контроллера
+
+## Полезные ссылки
+
+- [OpenVR Driver Documentation](https://github.com/ValveSoftware/openvr/wiki/Driver-Documentation)
+- [Simple OpenVR Driver Tutorial](https://github.com/terminal29/Simple-OpenVR-Driver-Tutorial)
+- [OpenVR API Reference](https://github.com/ValveSoftware/openvr/wiki/API-Documentation)
+
+## Отладка с Visual Studio
+
+Для отладки драйвера в Visual Studio:
+
+1. Установите **Microsoft Child Process Debugging Power Tool**
+2. В свойствах проекта установите:
+   - **Debugging → Command**: `C:\Program Files (x86)\Steam\steamapps\common\SteamVR\bin\win64\vrstartup.exe`
+   - **Enable child process debugging**: Yes
+   - **Child process to debug**: `vrserver.exe`
+3. Теперь можно ставить точки останова в коде драйвера!
+
+## Команды для быстрой переустановки
+
+Создайте `reinstall.bat`:
+
+```batch
+@echo off
+taskkill /F /IM vrserver.exe 2>nul
+timeout /t 2 >nul
+cd build
+cmake --build . --config Release
+cd ..
+manual_install.bat
+```
+
+Это автоматизирует: остановку SteamVR → пересборку → установку.
 
 # Установите C++ инструменты для VS Code
 # Установите CMake

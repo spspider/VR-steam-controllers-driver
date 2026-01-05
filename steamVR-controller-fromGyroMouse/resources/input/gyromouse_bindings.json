@@ -1,0 +1,45 @@
+{
+  "controller_type": "gyromouse_controller",
+  "bindings": {
+    "/actions/main": {
+      "sources": [
+        {
+          "inputs": {
+            "click": {
+              "output": "/actions/main/in/trigger"
+            }
+          },
+          "mode": "button",
+          "path": "/user/hand/left/input/trigger"
+        },
+        {
+          "inputs": {
+            "click": {
+              "output": "/actions/main/in/grip"
+            }
+          },
+          "mode": "button",
+          "path": "/user/hand/left/input/grip"
+        },
+        {
+          "inputs": {
+            "click": {
+              "output": "/actions/main/in/menu"
+            }
+          },
+          "mode": "button",
+          "path": "/user/hand/left/input/application_menu"
+        },
+        {
+          "inputs": {
+            "click": {
+              "output": "/actions/main/in/system"
+            }
+          },
+          "mode": "button",
+          "path": "/user/hand/left/input/system"
+        }
+      ]
+    }
+  }
+}

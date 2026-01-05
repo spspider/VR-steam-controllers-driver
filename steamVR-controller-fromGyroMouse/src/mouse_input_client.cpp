@@ -16,12 +16,15 @@ MouseInputClient::~MouseInputClient() {
 
 bool MouseInputClient::Start() {
     WSADATA wsaData;
-    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+    int wsaResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    if (wsaResult != 0) {
+        // Log WSA error
         return false;
     }
 
     SOCKET socket = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (socket == INVALID_SOCKET) {
+        int error = WSAGetLastError();
         WSACleanup();
         return false;
     }
@@ -34,14 +37,20 @@ bool MouseInputClient::Start() {
     serverAddr.sin_addr.s_addr = INADDR_ANY;
 
     if (bind(socket, (sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
+        int error = WSAGetLastError();
         closesocket(socket);
         WSACleanup();
         return false;
     }
 
-    // Установим неблокирующий режим
+    // Set non-blocking mode
     u_long mode = 1;
-    ioctlsocket(socket, FIONBIO, &mode);
+    if (ioctlsocket(socket, FIONBIO, &mode) == SOCKET_ERROR) {
+        int error = WSAGetLastError();
+        closesocket(socket);
+        WSACleanup();
+        return false;
+    }
 
     m_running = true;
     return true;
@@ -69,10 +78,6 @@ bool MouseInputClient::Receive(MouseControllerData& data) {
         0, (sockaddr*)&clientAddr, &clientAddrSize);
 
     if (bytesReceived == SOCKET_ERROR) {
-        int error = WSAGetLastError();
-        if (error != WSAEWOULDBLOCK) {
-            return false;
-        }
         return false;
     }
 
@@ -96,13 +101,4 @@ bool MouseInputClient::VerifyChecksum(const MouseControllerData& data) {
     }
 
     return sum == data.checksum;
-}
-
-// ВАЖНО: Этот метод захватывает конкретное HID устройство
-// VID_2389 & PID_00A8 - гироскопическая мышь
-// После захвата устройство перестанет работать как обычная мышь в Windows
-// и будет использовано только как контроллер SteamVR
-bool MouseInputClient::CaptureHIDDevice() {
-    m_hidDevice = std::make_unique<HIDDevice>(0x2389, 0x00A8);
-    return m_hidDevice->Open();
 }

@@ -2,6 +2,20 @@
   "alwaysActivate": true,
   "enable": true,
   "name": "gyromouse",
-  "directory": "gyromouse",
-  "resourceOnly": false
+  "directory": "",
+  "resourceOnly": false,
+  "hmd_presence": [],
+  "driver": [
+    {
+      "name": "gyromouse",
+      "type": "tracked_device",
+      "manufacturer": "GyroMouse",
+      "model_number": "GM_Controller_MK1",
+      "serial_number": "GM_DRIVER_001",
+      "tracked_device_class": "controller",
+      "hmd_type": "",
+      "vr_mode": "standing",
+      "lighthouse": false
+    }
+  ]
 }
