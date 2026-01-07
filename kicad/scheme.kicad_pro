@@ -520,7 +520,7 @@
     "last_paths": {
       "gencad": "",
       "idf": "",
-      "netlist": "",
+      "netlist": "C:/Program Files/KiCad/8.0/",
       "plot": "gerber/",
       "pos_files": "",
       "specctra_dsn": "scheme.dsn",

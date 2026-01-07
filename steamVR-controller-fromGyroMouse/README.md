@@ -1,3 +1,8 @@
+
+GYRO MOUSE DEPRECATED
+left only for example
+
+
 cd steamVR-controller-fromGyroMouse
 mkdir build
 cd build

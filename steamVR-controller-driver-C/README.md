@@ -4,7 +4,6 @@
 
 Create the following folder structure:
 
-```
 cvdriver/
 ├── src/
 │   ├── driver.h
@@ -21,220 +20,171 @@ cvdriver/
 │   └── bin/win64/
 ├── CMakeLists.txt
 └── simple_simulator.py
-```
 
-### Шаг 2: Установите драйвер вручную
+### Step 2: Install the driver manually
 
-1. Сохраните `manual_install.bat` в корень проекта
-2. **Запустите от имени администратора** (правой кнопкой → "Запуск от имени администратора")
-3. Скрипт автоматически скопирует все файлы
+1. Save `manual_install.bat` to the project root
+2. Run it **as Administrator** (right‑click → “Run as administrator”)
+3. The script will automatically copy all required files
 
-### Шаг 3: Проверьте установку
+### Step 3: Verify installation
 
-1. Запустите `check_installation.bat`
-2. Убедитесь что все 4 файла на месте:
-   - ✅ `driver_cvdriver.dll`
-   - ✅ `openvr_api.dll`
-   - ✅ `driver.vrdrivermanifest`
-   - ✅ `cvcontroller_profile.json`
+1. Run `check_installation.bat`
+2. Make sure all 4 files are present:
+   - driver_cvdriver.dll
+   - openvr_api.dll
+   - driver.vrdrivermanifest
+   - cvcontroller_profile.json
 
-### Шаг 4: Зарегистрируйте драйвер в SteamVR
+### Step 4: Register the driver in SteamVR
 
-**Метод 1: Через openvrpaths.vrpath (РЕКОМЕНДУЕТСЯ)**
+Method 1: Using openvrpaths.vrpath (RECOMMENDED)
 
-1. Откройте файл:
-   ```
-   C:\Users\<ВашеИмя>\AppData\Local\openvr\openvrpaths.vrpath
-   ```
+1. Open the file:
+   C:\Users\<YourName>\AppData\Local\openvr\openvrpaths.vrpath
 
-2. Добавьте путь к драйверу в секцию `external_drivers`:
-   ```json
+2. Add the driver path to the `external_drivers` section:
+
    {
      "external_drivers": [
        "C:\\Program Files (x86)\\Steam\\steamapps\\common\\SteamVR\\drivers\\cvdriver"
      ]
    }
-   ```
 
-**Метод 2: Через vrpathreg (если есть)**
+Method 2: Using vrpathreg (if available)
 
-```bash
 "C:\Program Files (x86)\Steam\steamapps\common\SteamVR\bin\win64\vrpathreg.exe" adddriver "C:\Program Files (x86)\Steam\steamapps\common\SteamVR\drivers\cvdriver"
-```
 
-### Шаг 5: Создайте default.vrsettings
+### Step 5: Create default.vrsettings
 
-Создайте файл:
-```
+Create the file:
 C:\Program Files (x86)\Steam\steamapps\common\SteamVR\drivers\cvdriver\resources\settings\default.vrsettings
-```
 
-Содержимое:
-```json
+Contents:
+
 {
    "driver_cvdriver": {
       "enable": true,
       "blocked_by_safe_mode": false
    }
 }
-```
 
-### Шаг 6: Запустите симулятор
+### Step 6: Run the simulator
 
-```bash
 python simple_simulator.py
-```
 
-Вы должны увидеть:
-```
+You should see:
+
 Starting simple controller simulator on 127.0.0.1:5555
 Simulating 2 controllers with rotating motion and button presses
 Packet 0: Controllers active, time: 0.0s
 Packet 2: Controllers active, time: 0.0s
-```
 
-### Шаг 7: Запустите SteamVR
+### Step 7: Launch SteamVR
 
-1. Запустите SteamVR
-2. Откройте **SteamVR Status** (значок в трее)
-3. Нажмите на **☰** → **Devices** → **Manage Vive Controllers**
-4. Вы должны увидеть **2 контроллера** - CV_Controller_Left и CV_Controller_Right
+1. Start SteamVR
+2. Open SteamVR Status (tray icon)
+3. Click ☰ → Devices → Manage Vive Controllers
+4. You should see 2 controllers — CV_Controller_Left and CV_Controller_Right
 
-## Проверка логов
+## Log checking
 
-Если контроллеры не появились, проверьте логи:
+If the controllers do not appear, check the logs:
 
-```
 C:\Program Files (x86)\Steam\logs\vrserver.txt
-```
 
-Ищите строки:
-```
+Look for lines like:
+
 [CVDriver] === CVDriver v2.1 INIT START ===
 [CVDriver] Controllers registered successfully
 [CVDriver] Network client started on port 5555
 [CVDriver] Packet 1000 from controller 0 - Quat(...)
-```
 
-## Отладка проблем
+## Troubleshooting
 
-### Проблема: "Driver not loaded"
+### Problem: "Driver not loaded"
 
-**Решение:**
-1. Проверьте что `driver.vrdrivermanifest` находится в `resources/`
-2. Проверьте `openvrpaths.vrpath` - путь должен быть правильным
-3. Перезапустите SteamVR
+Solution:
+1. Ensure driver.vrdrivermanifest is inside resources/
+2. Check openvrpaths.vrpath — the path must be correct
+3. Restart SteamVR
 
-### Проблема: Контроллеры серые/неактивные
+### Problem: Controllers are gray/inactive
 
-**Решение:**
-1. Убедитесь что симулятор запущен и отправляет данные
-2. Проверьте что порт 5555 не заблокирован фаерволом
-3. Посмотрите логи - должны быть сообщения о получении пакетов
+Solution:
+1. Make sure the simulator is running and sending data
+2. Check that port 5555 is not blocked by the firewall
+3. Check logs — there should be messages about receiving packets
 
-### Проблема: Контроллеры не двигаются
+### Problem: Controllers do not move
 
-**Решение:**
-1. Код должен быть обновлен - проверьте что есть метод `RunFrame()`
-2. В логах должны быть сообщения каждые 1000 пакетов
-3. Попробуйте перезапустить SteamVR
+Solution:
+1. Code must be updated — ensure RunFrame() exists
+2. Logs should show messages every 1000 packets
+3. Try restarting SteamVR
 
-### Проблема: Firewall блокирует порт 5555
+### Problem: Firewall blocks port 5555
 
-**Решение:**
-```powershell
-# Запустите PowerShell от имени администратора
+Solution:
+
 New-NetFirewallRule -DisplayName "CVDriver UDP 5555" -Direction Inbound -Protocol UDP -LocalPort 5555 -Action Allow
-```
 
-## Структура папки драйвера
+## Driver folder structure
 
-После установки структура должна быть такой:
+After installation, the structure should look like this:
 
-```
 C:\Program Files (x86)\Steam\steamapps\common\SteamVR\drivers\cvdriver\
 ├── bin\
 │   └── win64\
-│       ├── driver_cvdriver.dll         ← Ваш драйвер
-│       └── openvr_api.dll              ← OpenVR API
+│       ├── driver_cvdriver.dll
+│       └── openvr_api.dll
 └── resources\
-    ├── driver.vrdrivermanifest         ← Манифест драйвера
+    ├── driver.vrdrivermanifest
     ├── input\
-    │   └── cvcontroller_profile.json   ← Профиль ввода
+    │   └── cvcontroller_profile.json
     └── settings\
-        └── default.vrsettings          ← Настройки (опционально)
-```
+        └── default.vrsettings
 
-## Следующие шаги
+## Next steps
 
-После успешной установки:
+After successful installation:
 
-1. ✅ Контроллеры должны появиться в SteamVR
-2. ✅ Они должны вращаться (симулятор)
-3. ✅ Кнопки должны мигать (симулятор)
-4. ✅ В логах должны быть сообщения о получении данных
+1. Controllers should appear in SteamVR
+2. They should rotate (simulator)
+3. Buttons should blink (simulator)
+4. Logs should show incoming data
 
-Теперь можно:
-- Подключить реальный Arduino контроллер
-- Настроить калибровку
-- Добавить больше кнопок
-- Создать свою 3D модель контроллера
+Now you can:
+- Connect a real Arduino controller
+- Configure calibration
+- Add more buttons
+- Create your own 3D controller model
 
-## Полезные ссылки
+## Useful links
 
-- [OpenVR Driver Documentation](https://github.com/ValveSoftware/openvr/wiki/Driver-Documentation)
-- [Simple OpenVR Driver Tutorial](https://github.com/terminal29/Simple-OpenVR-Driver-Tutorial)
-- [OpenVR API Reference](https://github.com/ValveSoftware/openvr/wiki/API-Documentation)
+OpenVR Driver Documentation:
+https://github.com/ValveSoftware/openvr/wiki/Driver-Documentation
 
-## Отладка с Visual Studio
+Simple OpenVR Driver Tutorial:
+https://github.com/terminal29/Simple-OpenVR-Driver-Tutorial
 
-Для отладки драйвера в Visual Studio:
+OpenVR API Reference:
+https://github.com/ValveSoftware/openvr/wiki/API-Documentation
 
-1. Установите **Microsoft Child Process Debugging Power Tool**
-2. В свойствах проекта установите:
-   - **Debugging → Command**: `C:\Program Files (x86)\Steam\steamapps\common\SteamVR\bin\win64\vrstartup.exe`
-   - **Enable child process debugging**: Yes
-   - **Child process to debug**: `vrserver.exe`
-3. Теперь можно ставить точки останова в коде драйвера!
+## Debugging with Visual Studio
 
-## Команды для быстрой переустановки
+To debug the driver in Visual Studio:
 
-Создайте `reinstall.bat`:
+1. Install Microsoft Child Process Debugging Power Tool
+2. In project properties set:
+   Debugging → Command:
+   C:\Program Files (x86)\Steam\steamapps\common\SteamVR\bin\win64\vrstartup.exe
+   Enable child process debugging: Yes
+   Child process to debug: vrserver.exe
+3. Now you can set breakpoints inside the driver code!
 
-```batch
-@echo off
-taskkill /F /IM vrserver.exe 2>nul
-timeout /t 2 >nul
-cd build
-cmake --build . --config Release
-cd ..
-manual_install.bat
-```
+## Quick reinstall commands
 
-Это автоматизирует: остановку SteamVR → пересборку → установку.
+Create reinstall.bat:
 
-# Установите C++ инструменты для VS Code
-# Установите CMake
-# Скачайте OpenVR SDK с GitHub: https://github.com/ValveSoftware/openvr
-
-rm -r build/*
-mkdir build && cd build
-clear;cmake .. -G "Visual Studio 17 2022" -A x64; cmake --build . --config Release
-
-
-4. Создайте файл настроек:
-Путь: C:\Program Files (x86)\Steam\steamapps\common\SteamVR\drivers\cvdriver\resources\settings\default.vrsettings
-json{
-   "driver_cvdriver": {
-      "enable": true,
-      "blocked_by_safe_mode": false
-   }
-}
-5. Добавьте драйвер в openvrpaths.vrpath:
-Откройте: C:\Users\<ВашеИмя>\AppData\Local\openvr\openvrpaths.vrpath
-Добавьте:
-json{
-  "external_drivers": [
-    "C:\\Program Files (x86)\\Steam\\steamapps\\common\\SteamVR\\drivers\\cvdriver"
-  ]
-}
+(batch file content here)

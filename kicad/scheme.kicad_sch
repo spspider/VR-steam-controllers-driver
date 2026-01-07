@@ -3820,6 +3820,185 @@
 				)
 			)
 		)
+		(symbol "models:OS102011MS2QN1_SlideSwitch"
+			(pin_names
+				(offset 1.016)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "S"
+				(at -2.5411 5.0822 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left bottom)
+				)
+			)
+			(property "Value" "OS102011MS2QN1_SlideSwitch"
+				(at -2.544 -7.6319 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left bottom)
+				)
+			)
+			(property "Footprint" "module-custom-for-esp8266:SW_OS102011MS2QN1_slideSwitch"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify bottom)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "MP" "OS102011MS2QN1"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify bottom)
+					(hide yes)
+				)
+			)
+			(symbol "OS102011MS2QN1_SlideSwitch_0_0"
+				(rectangle
+					(start -2.54 -4.318)
+					(end 2.286 4.318)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(polyline
+					(pts
+						(xy -2.54 -2.54) (xy 0 -2.54)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -2.54 0) (xy -1.27 0)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -2.54 2.54) (xy 0 2.54)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -1.27 0) (xy 0.508 -2.54)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin passive line
+					(at -5.08 2.54 0)
+					(length 2.54)
+					(name "1"
+						(effects
+							(font
+								(size 1.016 1.016)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.016 1.016)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -5.08 0 0)
+					(length 2.54)
+					(name "2"
+						(effects
+							(font
+								(size 1.016 1.016)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.016 1.016)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -5.08 -2.54 0)
+					(length 2.54)
+					(name "3"
+						(effects
+							(font
+								(size 1.016 1.016)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.016 1.016)
+							)
+						)
+					)
+				)
+			)
+		)
 		(symbol "models:R-10k"
 			(pin_numbers hide)
 			(pin_names
@@ -4073,246 +4252,6 @@
 						(effects
 							(font
 								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-		)
-		(symbol "models:SLW-883935-2A-D"
-			(pin_names
-				(offset 1.016)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(property "Reference" "S"
-				(at -2.54 5.08 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify left bottom)
-				)
-			)
-			(property "Value" "SLW-883935-2A-D"
-				(at -2.54 -5.08 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify left top)
-				)
-			)
-			(property "Footprint" "module-custom-for-esp8266:SW_SLW-883935-2A-D"
-				(at 0.508 10.414 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify bottom)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Description" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "MF" "Same Sky"
-				(at 0.254 -12.7 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify bottom)
-					(hide yes)
-				)
-			)
-			(property "MAXIMUM_PACKAGE_HEIGHT" "6.1mm"
-				(at -1.27 3.81 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify bottom)
-					(hide yes)
-				)
-			)
-			(property "Package" "Package"
-				(at -1.27 21.082 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify bottom)
-					(hide yes)
-				)
-			)
-			(property "Price" "None"
-				(at -0.762 -10.922 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify bottom)
-					(hide yes)
-				)
-			)
-			(property "PARTREV" "1.01"
-				(at 0.762 6.35 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify bottom)
-					(hide yes)
-				)
-			)
-			(property "MP" "SLW-883935-2A-D"
-				(at -1.27 13.716 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify bottom)
-					(hide yes)
-				)
-			)
-			(symbol "SLW-883935-2A-D_0_0"
-				(polyline
-					(pts
-						(xy -2.54 0) (xy -5.08 0)
-					)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -2.54 0) (xy 2.794 2.1336)
-					)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 5.08 -2.54) (xy 2.921 -2.54)
-					)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 5.08 2.54) (xy 2.921 2.54)
-					)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(circle
-					(center 2.54 -2.54)
-					(radius 0.3302)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(circle
-					(center 2.54 2.54)
-					(radius 0.3302)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(pin passive line
-					(at 7.62 2.54 180)
-					(length 2.54)
-					(name "~"
-						(effects
-							(font
-								(size 1.016 1.016)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.016 1.016)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -7.62 0 0)
-					(length 2.54)
-					(name "~"
-						(effects
-							(font
-								(size 1.016 1.016)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.016 1.016)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 7.62 -2.54 180)
-					(length 2.54)
-					(name "~"
-						(effects
-							(font
-								(size 1.016 1.016)
-							)
-						)
-					)
-					(number "3"
-						(effects
-							(font
-								(size 1.016 1.016)
 							)
 						)
 					)
@@ -5191,7 +5130,7 @@
 	)
 	(wire
 		(pts
-			(xy 73.66 93.98) (xy 85.09 93.98)
+			(xy 73.66 93.98) (xy 92.71 93.98)
 		)
 		(stroke
 			(width 0)
@@ -5318,6 +5257,16 @@
 			(type default)
 		)
 		(uuid "14cdfa6d-db95-40e6-99ae-19b4bf0e830a")
+	)
+	(wire
+		(pts
+			(xy 186.69 115.57) (xy 187.96 115.57)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "1514471a-4b64-4bf6-81b5-15414c85d004")
 	)
 	(wire
 		(pts
@@ -5671,7 +5620,7 @@
 	)
 	(wire
 		(pts
-			(xy 374.65 27.94) (xy 374.65 29.21)
+			(xy 374.65 25.4) (xy 374.65 29.21)
 		)
 		(stroke
 			(width 0)
@@ -5698,6 +5647,16 @@
 			(type default)
 		)
 		(uuid "5439346b-339e-449b-a637-85efe63990a9")
+	)
+	(wire
+		(pts
+			(xy 95.25 96.52) (xy 95.25 93.98)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "554d14f7-2277-46d5-b01c-58a3929453f5")
 	)
 	(wire
 		(pts
@@ -5728,6 +5687,16 @@
 			(type default)
 		)
 		(uuid "58be19ca-7789-4f55-8a19-8f0e0296ccfb")
+	)
+	(wire
+		(pts
+			(xy 95.25 96.52) (xy 111.76 96.52)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "5a49566b-8940-48d8-bfc2-de1418f9b579")
 	)
 	(wire
 		(pts
@@ -6591,6 +6560,16 @@
 	)
 	(wire
 		(pts
+			(xy 36.83 24.13) (xy 36.83 35.56)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "db35ab5f-a6de-45ff-85c4-69250a20f2d4")
+	)
+	(wire
+		(pts
 			(xy 92.71 170.18) (xy 92.71 179.07)
 		)
 		(stroke
@@ -6768,16 +6747,6 @@
 			(type default)
 		)
 		(uuid "f1d88736-fa69-4223-a02a-3ec2ace6c330")
-	)
-	(wire
-		(pts
-			(xy 100.33 96.52) (xy 111.76 96.52)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "f446cd66-f922-4e05-a2ac-c5a7a53a23a3")
 	)
 	(wire
 		(pts
@@ -7001,7 +6970,7 @@
 		(uuid "28228616-a0b4-4d60-8e46-c64d88582321")
 	)
 	(label "bt+"
-		(at 36.83 35.56 0)
+		(at 36.83 24.13 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -7300,29 +7269,29 @@
 	(netclass_flag ""
 		(length 2.54)
 		(shape round)
-		(at 354.33 52.07 0)
+		(at 354.33 52.07 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify left bottom)
+			(justify right bottom)
 		)
 		(uuid "0c75a903-273f-468f-9335-aa3767d2ba8d")
 		(property "Netclass" "ICM-fine"
-			(at 346.964 53.848 0)
+			(at 356.108 57.15 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 					(italic yes)
 				)
-				(justify left)
+				(justify right)
 			)
 		)
 	)
 	(netclass_flag ""
 		(length 2.54)
 		(shape round)
-		(at 396.24 57.15 0)
+		(at 397.51 57.15 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -7331,7 +7300,7 @@
 		)
 		(uuid "303683b9-2553-4ab1-92fd-db82928aaea7")
 		(property "Netclass" "ICM-fine"
-			(at 396.748 55.372 0)
+			(at 398.018 55.372 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7344,7 +7313,7 @@
 	(netclass_flag ""
 		(length 2.54)
 		(shape round)
-		(at 369.57 26.67 0)
+		(at 369.57 26.67 90)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -7353,7 +7322,7 @@
 		)
 		(uuid "773cda81-77e1-43aa-b966-bf85dec119ef")
 		(property "Netclass" "ICM-fine"
-			(at 371.856 20.828 0)
+			(at 363.22 27.178 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7375,7 +7344,7 @@
 		)
 		(uuid "d2fc660b-88cf-4e0c-bbd4-236ef360c891")
 		(property "Netclass" "ICM-fine"
-			(at 382.016 28.194 0)
+			(at 382.27 24.13 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8839,16 +8808,16 @@
 	)
 	(symbol
 		(lib_id "power:+3.3V")
-		(at 374.65 27.94 0)
+		(at 186.69 115.57 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced yes)
-		(uuid "50f72c99-7f7b-4322-a6e9-48dd90d1eb5d")
-		(property "Reference" "#PWR037"
-			(at 374.65 31.75 0)
+		(uuid "501ec100-d0eb-4597-9837-a76471984ba3")
+		(property "Reference" "#PWR022"
+			(at 186.69 119.38 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8857,7 +8826,7 @@
 			)
 		)
 		(property "Value" "+3.3V"
-			(at 374.65 22.86 0)
+			(at 186.69 110.49 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8865,7 +8834,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 374.65 27.94 0)
+			(at 186.69 115.57 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8874,7 +8843,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 374.65 27.94 0)
+			(at 186.69 115.57 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8883,7 +8852,73 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
-			(at 374.65 27.94 0)
+			(at 186.69 115.57 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "718f027e-5dbb-4c41-b871-e1f58401c335")
+		)
+		(instances
+			(project "scheme"
+				(path "/106f73a4-4855-446c-b76f-02c16e6fa7c1"
+					(reference "#PWR022")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+3.3V")
+		(at 374.65 25.4 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "50f72c99-7f7b-4322-a6e9-48dd90d1eb5d")
+		(property "Reference" "#PWR037"
+			(at 374.65 29.21 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3.3V"
+			(at 374.65 20.32 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 374.65 25.4 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 374.65 25.4 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
+			(at 374.65 25.4 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10264,8 +10299,8 @@
 		)
 	)
 	(symbol
-		(lib_id "models:SLW-883935-2A-D")
-		(at 92.71 93.98 0)
+		(lib_id "models:OS102011MS2QN1_SlideSwitch")
+		(at 95.25 88.9 90)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -10274,23 +10309,25 @@
 		(fields_autoplaced yes)
 		(uuid "7a714e4b-8b30-48a0-a7eb-3af4745ca2b2")
 		(property "Reference" "S1"
-			(at 92.71 86.36 0)
+			(at 100.33 87.7569 90)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(justify right)
 			)
 		)
 		(property "Value" "SLW-883935-2A-D"
-			(at 92.71 88.9 0)
+			(at 100.33 90.2969 90)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(justify right)
 			)
 		)
-		(property "Footprint" "module-custom-for-esp8266:SW_SLW-883935-2A-D"
-			(at 93.218 83.566 0)
+		(property "Footprint" "module-custom-for-esp8266:SW_OS102011MS2QN1_slideSwitch"
+			(at 95.25 88.9 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10300,7 +10337,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 92.71 93.98 0)
+			(at 95.25 88.9 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10309,7 +10346,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 92.71 93.98 0)
+			(at 95.25 88.9 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10318,7 +10355,7 @@
 			)
 		)
 		(property "MF" "Same Sky"
-			(at 92.964 106.68 0)
+			(at 107.95 88.646 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10338,7 +10375,7 @@
 			)
 		)
 		(property "Package" "Package"
-			(at 91.44 72.898 0)
+			(at 74.168 90.17 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10348,7 +10385,7 @@
 			)
 		)
 		(property "Price" "None"
-			(at 91.948 104.902 0)
+			(at 106.172 89.662 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10358,7 +10395,7 @@
 			)
 		)
 		(property "PARTREV" "1.01"
-			(at 93.472 87.63 0)
+			(at 88.9 88.138 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10367,8 +10404,8 @@
 				(hide yes)
 			)
 		)
-		(property "MP" "SLW-883935-2A-D"
-			(at 91.44 80.264 0)
+		(property "MP" "OS102011MS2QN1"
+			(at 95.25 88.9 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12738,72 +12775,6 @@
 			(project "scheme"
 				(path "/106f73a4-4855-446c-b76f-02c16e6fa7c1"
 					(reference "#PWR015")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:+3.3V")
-		(at 187.96 115.57 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "da40abc3-dac8-4b08-bc44-200261bf110e")
-		(property "Reference" "#PWR022"
-			(at 187.96 119.38 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "+4.2V"
-			(at 187.96 110.49 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 187.96 115.57 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 187.96 115.57 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
-			(at 187.96 115.57 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "2a25d3b0-4d16-4797-b33c-b2cd3a25c3fa")
-		)
-		(instances
-			(project "scheme"
-				(path "/106f73a4-4855-446c-b76f-02c16e6fa7c1"
-					(reference "#PWR022")
 					(unit 1)
 				)
 			)
