@@ -75,7 +75,7 @@ vr::EVRInitError CVController::Activate(uint32_t unObjectId) {
     VRProperties()->SetInt32Property(m_ulPropertyContainer,
         Prop_Axis1Type_Int32, k_eControllerAxis_Trigger);
     
-    // Создаем компоненты ввода - ИСПРАВЛЕННЫЙ СИНТАКСИС
+    // Создаем компоненты ввода
     VRDriverInput()->CreateBooleanComponent(m_ulPropertyContainer, 
         "/input/trigger/click", &m_inputComponentHandles[0]);
     
@@ -140,40 +140,40 @@ void CVController::UpdateFromArduino(const ControllerData& data) {
         m_pose.qRotation.y = data.quat_y;
         m_pose.qRotation.z = data.quat_z;
         
-        // Рассчитываем дельта-время
-        static auto last_time = std::chrono::steady_clock::now();
-        auto now = std::chrono::steady_clock::now();
-        float dt = std::chrono::duration<float>(now - last_time).count();
-        if (dt > 0.1f) dt = 0.016f; // Ограничиваем разумным значением
-        last_time = now;
+        // ИСПРАВЛЕНИЕ: accel содержит ПОЗИЦИЮ, а не ускорение!
+        // Напрямую используем данные как позицию
+        m_pose.vecPosition[0] = data.accel_x;
+        m_pose.vecPosition[1] = data.accel_y;
+        m_pose.vecPosition[2] = data.accel_z;
         
-        // Обновляем ускорение и скорость
-        vr::HmdVector3d_t world_accel = {data.accel_x, data.accel_y, data.accel_z};
-        
-        m_pose.vecVelocity[0] += world_accel.v[0] * dt;
-        m_pose.vecVelocity[1] += world_accel.v[1] * dt;
-        m_pose.vecVelocity[2] += world_accel.v[2] * dt;
-        
-        // Применяем затухание
-        m_pose.vecVelocity[0] *= 0.95f;
-        m_pose.vecVelocity[1] *= 0.95f;
-        m_pose.vecVelocity[2] *= 0.95f;
-        
-        // Обновляем позицию
-        m_pose.vecPosition[0] += m_pose.vecVelocity[0] * dt;
-        m_pose.vecPosition[1] += m_pose.vecVelocity[1] * dt;
-        m_pose.vecPosition[2] += m_pose.vecVelocity[2] * dt;
-        
-        // Обновляем угловую скорость
+        // Обновляем угловую скорость из гироскопа
         m_pose.vecAngularVelocity[0] = data.gyro_x;
         m_pose.vecAngularVelocity[1] = data.gyro_y;
         m_pose.vecAngularVelocity[2] = data.gyro_z;
+        
+        // Обнуляем линейную скорость, так как мы используем прямое позиционирование
+        m_pose.vecVelocity[0] = 0.0;
+        m_pose.vecVelocity[1] = 0.0;
+        m_pose.vecVelocity[2] = 0.0;
         
         m_pose.poseIsValid = true;
         m_pose.result = TrackingResult_Running_OK;
         m_pose.deviceIsConnected = true;
         
-        m_lastUpdateTime = now;
+        m_lastUpdateTime = std::chrono::steady_clock::now();
+        
+        // ОТЛАДОЧНЫЙ ВЫВОД каждые 100 обновлений
+        static int updateCounter = 0;
+        updateCounter++;
+        if (updateCounter % 100 == 0) {
+            char logMsg[512];
+            snprintf(logMsg, sizeof(logMsg), 
+                "Controller %d: Pos(%.3f, %.3f, %.3f) Quat(%.3f, %.3f, %.3f, %.3f)",
+                (int)data.controller_id,
+                m_pose.vecPosition[0], m_pose.vecPosition[1], m_pose.vecPosition[2],
+                m_pose.qRotation.w, m_pose.qRotation.x, m_pose.qRotation.y, m_pose.qRotation.z);
+            VRDriverLog()->Log(logMsg);
+        }
     }
     
     // Обновляем состояние кнопок

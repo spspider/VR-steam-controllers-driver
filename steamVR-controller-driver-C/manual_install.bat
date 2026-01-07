@@ -1,19 +1,20 @@
+
 @echo off
 echo ========================================
 echo CVDriver Manual Installation Script
 echo ========================================
 echo.
 
-REM Проверяем права администратора
+REM Checking administrator rights
 net session >nul 2>&1
 if %errorLevel% NEQ 0 (
-    echo [ERROR] Нужны права администратора!
-    echo Запустите этот скрипт от имени администратора!
+    echo [ERROR] Administrator rights required!
+    echo Run this script as Administrator!
     pause
     exit /b 1
 )
 
-echo [INFO] Закрываем SteamVR...
+echo [INFO] Closing SteamVR...
 taskkill /F /IM vrserver.exe 2>nul
 taskkill /F /IM vrmonitor.exe 2>nul
 taskkill /F /IM vrdashboard.exe 2>nul
@@ -22,52 +23,53 @@ timeout /t 2 >nul
 set STEAMVR_PATH=C:\Program Files (x86)\Steam\steamapps\common\SteamVR\drivers\cvdriver
 set PROJECT_PATH=%~dp0
 
-echo [INFO] Создаём структуру папок...
+echo [INFO] Creating folder structure...
 mkdir "%STEAMVR_PATH%\bin\win64" 2>nul
 mkdir "%STEAMVR_PATH%\resources\input" 2>nul
 
-echo [INFO] Копируем driver DLL...
+echo [INFO] Copying driver DLL...
 copy /Y "%PROJECT_PATH%build\Release\driver_cvdriver.dll" "%STEAMVR_PATH%\bin\win64\"
 if %errorLevel% NEQ 0 (
-    echo [ERROR] Не удалось скопировать driver_cvdriver.dll
+    echo [ERROR] Failed to copy driver_cvdriver.dll
     pause
     exit /b 1
 )
 
-echo [INFO] Копируем OpenVR API DLL...
+echo [INFO] Copying OpenVR API DLL...
 copy /Y "%PROJECT_PATH%openvr\bin\win64\openvr_api.dll" "%STEAMVR_PATH%\bin\win64\"
 if %errorLevel% NEQ 0 (
-    echo [ERROR] Не удалось скопировать openvr_api.dll
+    echo [ERROR] Failed to copy openvr_api.dll
     pause
     exit /b 1
 )
 
-echo [INFO] Копируем driver manifest...
+echo [INFO] Copying driver manifest...
 copy /Y "%PROJECT_PATH%resources\driver.vrdrivermanifest" "%STEAMVR_PATH%\resources\"
 if %errorLevel% NEQ 0 (
-    echo [ERROR] Не удалось скопировать driver.vrdrivermanifest
+    echo [ERROR] Failed to copy driver.vrdrivermanifest
     pause
     exit /b 1
 )
 
-echo [INFO] Копируем input profile...
+echo [INFO] Copying input profile...
 copy /Y "%PROJECT_PATH%resources\input\cvcontroller_profile.json" "%STEAMVR_PATH%\resources\input\"
 if %errorLevel% NEQ 0 (
-    echo [ERROR] Не удалось скопировать cvcontroller_profile.json
+    echo [ERROR] Failed to copy cvcontroller_profile.json
     pause
     exit /b 1
 )
 
 echo.
 echo ========================================
-echo [SUCCESS] Установка завершена!
+echo [SUCCESS] Installation completed!
 echo ========================================
 echo.
-echo Файлы установлены в:
+echo Files installed in:
 echo %STEAMVR_PATH%
 echo.
-echo Теперь можно запустить:
+echo Now you can run:
 echo 1. simple_simulator.py
 echo 2. SteamVR
 echo.
 pause
+``
