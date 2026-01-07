@@ -12,10 +12,8 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
 import android.util.Size
-import android.util.SparseIntArray
 import android.view.Surface
 import android.view.TextureView
-import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -29,19 +27,17 @@ import org.opencv.objdetect.ArucoDetector
 import org.opencv.objdetect.Dictionary
 import org.opencv.objdetect.Objdetect
 import java.io.ByteArrayOutputStream
-import java.net.DatagramPacket
-import java.net.DatagramSocket
-import java.net.InetAddress
 import java.util.*
-import kotlin.math.sqrt
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var textureView: TextureView
     private lateinit var logTextView: TextView
     private lateinit var statusTextView: TextView
-    private lateinit var ipAddress: EditText
+    private lateinit var ipAddressInput: EditText
     private lateinit var connectButton: Button
+    private lateinit var calibrateButton: Button
+    private lateinit var resetCalibButton: Button
 
     private var cameraDevice: CameraDevice? = null
     private var cameraCaptureSession: CameraCaptureSession? = null
@@ -51,33 +47,14 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var detector: ArucoDetector
     private lateinit var dictionary: Dictionary
+    private lateinit var arUcoTransform: ArUcoTransform
 
-    private val udpSocket = DatagramSocket()
-    private var serverAddress: InetAddress? = null
-    private val serverPort = 4242
+    private var udpSender: ControllerUDPSender? = null
     private var isConnected = false
 
     private val logMessages = mutableListOf<String>()
     private var frameCounter = 0
-    private var markersDetected = 0
-    private var processingEnabled = true
-
-    // Ориентация устройства
-    private val ORIENTATIONS = SparseIntArray().apply {
-        append(Surface.ROTATION_0, 90)
-        append(Surface.ROTATION_90, 0)
-        append(Surface.ROTATION_180, 270)
-        append(Surface.ROTATION_270, 180)
-    }
-
-    private fun addLogMessage(message: String) {
-        logMessages.add("${System.currentTimeMillis() % 10000}: $message")
-        if (logMessages.size > 10) logMessages.removeAt(0)
-        runOnUiThread {
-            logTextView.text = logMessages.joinToString("\n")
-            statusTextView.text = "Frames: $frameCounter | Markers: $markersDetected"
-        }
-    }
+    private val markerCounts = mutableMapOf<Int, Int>()  // Track detection count per marker
 
     private val requiredPermissions = arrayOf(
         Manifest.permission.CAMERA,
@@ -85,6 +62,21 @@ class MainActivity : AppCompatActivity() {
     )
 
     private val REQUEST_CODE_PERMISSIONS = 10
+
+    private fun addLogMessage(message: String) {
+        logMessages.add("${System.currentTimeMillis() % 10000}: $message")
+        if (logMessages.size > 15) logMessages.removeAt(0)
+        runOnUiThread {
+            logTextView.text = logMessages.joinToString("\n")
+
+            val totalMarkers = markerCounts.values.sum()
+            val leftCount = markerCounts[0] ?: 0
+            val rightCount = markerCounts[1] ?: 0
+
+            statusTextView.text = "Frames: $frameCounter | Markers: $totalMarkers " +
+                    "(L:$leftCount R:$rightCount)"
+        }
+    }
 
     private fun checkPermissions(): Boolean {
         return requiredPermissions.all {
@@ -115,7 +107,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Проверяем OpenCV
+        // Check OpenCV
         if (!OpenCVLoader.initLocal()) {
             Log.e("MainActivity", "OpenCV initialization failed!")
             Toast.makeText(this, "OpenCV initialization failed!", Toast.LENGTH_LONG).show()
@@ -124,42 +116,49 @@ class MainActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_main)
 
-        // Инициализация UI
+        // Initialize UI elements
         textureView = findViewById(R.id.texture_view)
         logTextView = findViewById(R.id.logTextView)
         statusTextView = findViewById(R.id.statusTextView)
-        ipAddress = findViewById(R.id.ipAddress)
+        ipAddressInput = findViewById(R.id.ipAddress)
         connectButton = findViewById(R.id.connectButton)
+        calibrateButton = findViewById(R.id.calibrateButton)
+        resetCalibButton = findViewById(R.id.resetCalibButton)
 
-        // Устанавливаем дефолтный IP
-        ipAddress.setText("192.168.1.199")
+        // Set default IP (your PC's IP on local network)
+        ipAddressInput.setText("192.168.1.199")
         addLogMessage("App started - OpenCV loaded")
 
-        // Инициализация ArUco
+        // Initialize ArUco detector
         try {
-            dictionary = Objdetect.getPredefinedDictionary(Objdetect.DICT_6X6_250)
+            dictionary = Objdetect.getPredefinedDictionary(Objdetect.DICT_4X4_50)
             detector = ArucoDetector(dictionary)
-            addLogMessage("ArUco detector ready for DICT_6X6_250")
+            arUcoTransform = ArUcoTransform()
+            addLogMessage("ArUco detector ready (DICT_4X4_50)")
         } catch (e: Exception) {
             Log.e("MainActivity", "ArUco init error: ${e.message}")
             addLogMessage("ArUco init failed: ${e.message}")
         }
 
-        // Настройка кнопки подключения
+        // Connect button
         connectButton.setOnClickListener {
-            val ip = ipAddress.text.toString()
+            val ip = ipAddressInput.text.toString()
             if (ip.isNotEmpty()) {
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
-                        serverAddress = InetAddress.getByName(ip)
+                        udpSender?.close()
+                        udpSender = ControllerUDPSender(ip, 5555)
                         isConnected = true
+
                         runOnUiThread {
-                            Toast.makeText(this@MainActivity, "Connected to $ip", Toast.LENGTH_SHORT).show()
-                            addLogMessage("Connected to $ip")
+                            Toast.makeText(this@MainActivity, "Connected to $ip:5555", Toast.LENGTH_SHORT).show()
+                            addLogMessage("Connected to $ip:5555 (SteamVR)")
+                            connectButton.text = "Connected"
+                            connectButton.isEnabled = false
                         }
                     } catch (e: Exception) {
                         runOnUiThread {
-                            Toast.makeText(this@MainActivity, "Invalid IP", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@MainActivity, "Connection failed: ${e.message}", Toast.LENGTH_SHORT).show()
                             addLogMessage("Connection failed")
                         }
                     }
@@ -167,20 +166,21 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Кнопка для включения/выключения обработки
-        val toggleButton = Button(this).apply {
-            text = "Toggle Processing"
-            setOnClickListener {
-                processingEnabled = !processingEnabled
-                addLogMessage(if (processingEnabled) "Processing enabled" else "Processing disabled")
-            }
+        // Calibrate button
+        calibrateButton.setOnClickListener {
+            // Calibration is done per-marker when detected
+            addLogMessage("Calibration: Move marker to center, will auto-calibrate")
+            Toast.makeText(this, "Move marker to center position", Toast.LENGTH_SHORT).show()
         }
-        addContentView(toggleButton, LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.WRAP_CONTENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
-        ))
 
-        // Проверяем и запрашиваем разрешения
+        // Reset calibration button
+        resetCalibButton.setOnClickListener {
+            arUcoTransform.resetCalibration()
+            addLogMessage("Calibration reset")
+            Toast.makeText(this, "Calibration reset", Toast.LENGTH_SHORT).show()
+        }
+
+        // Check and request permissions
         if (checkPermissions()) {
             initializeCamera()
         } else {
@@ -191,7 +191,6 @@ class MainActivity : AppCompatActivity() {
     private fun initializeCamera() {
         startBackgroundThread()
 
-        // Настраиваем TextureView
         textureView.surfaceTextureListener = object : TextureView.SurfaceTextureListener {
             override fun onSurfaceTextureAvailable(
                 surface: android.graphics.SurfaceTexture,
@@ -234,17 +233,14 @@ class MainActivity : AppCompatActivity() {
     private fun openCamera(width: Int, height: Int) {
         val cameraManager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
         try {
-            val cameraId = cameraManager.cameraIdList[0] // Используем заднюю камеру
+            val cameraId = cameraManager.cameraIdList[0]
 
-            // Получаем характеристики камеры
             val characteristics = cameraManager.getCameraCharacteristics(cameraId)
             val map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
                 ?: throw RuntimeException("Cannot get available preview sizes")
 
-            // Выбираем размер изображения
             val previewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture::class.java), width, height)
 
-            // Настраиваем ImageReader для получения кадров
             imageReader = ImageReader.newInstance(
                 previewSize.width,
                 previewSize.height,
@@ -258,7 +254,6 @@ class MainActivity : AppCompatActivity() {
 
             textureView.surfaceTexture?.setDefaultBufferSize(previewSize.width, previewSize.height)
 
-            // Запрашиваем разрешение на использование камеры
             if (ActivityCompat.checkSelfPermission(
                     this,
                     Manifest.permission.CAMERA
@@ -270,7 +265,7 @@ class MainActivity : AppCompatActivity() {
             cameraManager.openCamera(cameraId, object : CameraDevice.StateCallback() {
                 override fun onOpened(camera: CameraDevice) {
                     cameraDevice = camera
-                    addLogMessage("Camera opened: ${previewSize.width}x${previewSize.height}")
+                    addLogMessage("Camera: ${previewSize.width}x${previewSize.height}")
                     createCameraPreviewSession()
                 }
 
@@ -293,17 +288,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun chooseOptimalSize(choices: Array<Size>, width: Int, height: Int): Size {
-        // Выбираем размер с правильным соотношением сторон
-        val targetRatio = width.toDouble() / height.toDouble()
-        
-        // Ищем размер близкий к 640x480 с правильным соотношением
         val preferredSizes = listOf(
             Size(640, 480),
             Size(800, 600),
-            Size(1024, 768),
-            Size(1280, 960)
+            Size(1280, 720)
         )
-        
+
         for (preferredSize in preferredSizes) {
             for (size in choices) {
                 if (size.width == preferredSize.width && size.height == preferredSize.height) {
@@ -311,37 +301,13 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-        
-        // Если точного совпадения нет, выбираем размер с близким соотношением сторон
-        var bestSize = choices[0]
-        var minRatioDiff = Double.MAX_VALUE
-        
-        for (size in choices) {
-            val ratio = size.width.toDouble() / size.height.toDouble()
-            val ratioDiff = Math.abs(ratio - targetRatio)
-            if (ratioDiff < minRatioDiff) {
-                minRatioDiff = ratioDiff
-                bestSize = size
-            }
-        }
-        
-        return bestSize
+
+        return choices.firstOrNull { it.width <= 1280 && it.height <= 720 } ?: choices[0]
     }
 
     private fun createCameraPreviewSession() {
         try {
             val texture = textureView.surfaceTexture
-            
-            // Получаем размер камеры
-            val cameraManager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
-            val cameraId = cameraManager.cameraIdList[0]
-            val characteristics = cameraManager.getCameraCharacteristics(cameraId)
-            val map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
-            val previewSize = chooseOptimalSize(map!!.getOutputSizes(SurfaceTexture::class.java), textureView.width, textureView.height)
-            
-            // Устанавливаем правильный размер для TextureView
-            texture?.setDefaultBufferSize(previewSize.width, previewSize.height)
-            
             val surface = Surface(texture)
             val targets = listOf(surface, imageReader?.surface)
 
@@ -355,14 +321,14 @@ class MainActivity : AppCompatActivity() {
                     }
 
                     override fun onConfigureFailed(session: CameraCaptureSession) {
-                        addLogMessage("Camera session configuration failed")
+                        addLogMessage("Camera session failed")
                     }
                 },
                 null
             )
 
         } catch (e: Exception) {
-            Log.e("MainActivity", "Error creating camera preview session", e)
+            Log.e("MainActivity", "Error creating preview session", e)
             addLogMessage("Session error: ${e.message}")
         }
     }
@@ -373,7 +339,6 @@ class MainActivity : AppCompatActivity() {
             captureRequestBuilder?.addTarget(Surface(textureView.surfaceTexture))
             imageReader?.surface?.let { captureRequestBuilder?.addTarget(it) }
 
-            // Настраиваем автофокус
             captureRequestBuilder?.set(
                 CaptureRequest.CONTROL_AF_MODE,
                 CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE
@@ -386,36 +351,31 @@ class MainActivity : AppCompatActivity() {
             )
 
         } catch (e: Exception) {
-            Log.e("MainActivity", "Error starting camera preview", e)
+            Log.e("MainActivity", "Error starting preview", e)
             addLogMessage("Preview error: ${e.message}")
         }
     }
 
     private fun processImage(image: Image?) {
-        if (!processingEnabled || image == null) {
-            image?.close()
-            return
-        }
+        if (image == null) return
 
         frameCounter++
 
         try {
-            // Конвертируем YUV_420_888 в Bitmap
             val bitmap = yuv420ToBitmap(image)
 
             if (bitmap != null) {
-                // Конвертируем Bitmap в Mat
                 val rgbaMat = Mat(bitmap.height, bitmap.width, CvType.CV_8UC4)
                 Utils.bitmapToMat(bitmap, rgbaMat)
 
-                // Конвертируем RGBA в GRAY для детекции
                 val grayMat = Mat()
                 Imgproc.cvtColor(rgbaMat, grayMat, Imgproc.COLOR_RGBA2GRAY)
 
-                // Обнаружение ArUco маркеров
                 detectArUcoMarkers(grayMat)
 
                 bitmap.recycle()
+                rgbaMat.release()
+                grayMat.release()
             }
         } catch (e: Exception) {
             Log.e("MainActivity", "Error processing image", e)
@@ -437,16 +397,10 @@ class MainActivity : AppCompatActivity() {
 
             val nv21 = ByteArray(ySize + uSize + vSize)
 
-            // Y plane
             yBuffer.get(nv21, 0, ySize)
-
-            // V plane
             vBuffer.get(nv21, ySize, vSize)
-
-            // U plane
             uBuffer.get(nv21, ySize + vSize, uSize)
 
-            // Создаем YuvImage
             val yuvImage = android.graphics.YuvImage(
                 nv21,
                 ImageFormat.NV21,
@@ -456,13 +410,17 @@ class MainActivity : AppCompatActivity() {
             )
 
             val outputStream = ByteArrayOutputStream()
-            yuvImage.compressToJpeg(android.graphics.Rect(0, 0, image.width, image.height), 100, outputStream)
+            yuvImage.compressToJpeg(
+                android.graphics.Rect(0, 0, image.width, image.height),
+                100,
+                outputStream
+            )
             val jpegData = outputStream.toByteArray()
 
             return BitmapFactory.decodeByteArray(jpegData, 0, jpegData.size)
 
         } catch (e: Exception) {
-            Log.e("MainActivity", "Error converting YUV to Bitmap", e)
+            Log.e("MainActivity", "Error converting YUV", e)
             return null
         }
     }
@@ -474,48 +432,44 @@ class MainActivity : AppCompatActivity() {
             val corners = ArrayList<Mat>()
             val ids = Mat()
 
-            // Детектируем маркеры
             detector.detectMarkers(grayMat, corners, ids)
 
             val markerCount = corners.size
-            markersDetected = markerCount
 
             if (markerCount > 0 && !ids.empty()) {
-                // Обрабатываем каждый маркер
                 for (i in 0 until markerCount) {
-                    val cornerMat = corners[i]
-
-                    // Получаем ID маркера
                     val idArray = IntArray(1)
                     ids.get(i, 0, idArray)
-                    val id = idArray[0]
+                    val markerId = idArray[0]
 
-                    // Вычисляем центр маркера
-                    val cornerData = FloatArray(8)
-                    cornerMat.get(0, 0, cornerData)
+                    // Only process markers with ID 0 (left) or 1 (right)
+                    if (markerId != 0 && markerId != 1) continue
 
-                    val centerX = (cornerData[0] + cornerData[2] + cornerData[4] + cornerData[6]) / 4.0
-                    val centerY = (cornerData[1] + cornerData[3] + cornerData[5] + cornerData[7]) / 4.0
+                    // Track detection count
+                    markerCounts[markerId] = (markerCounts[markerId] ?: 0) + 1
 
-                    // Вычисляем размер маркера
-                    val width = sqrt(
-                        (cornerData[2] - cornerData[0]) * (cornerData[2] - cornerData[0]) +
-                                (cornerData[3] - cornerData[1]) * (cornerData[3] - cornerData[1])
-                    )
+                    // Estimate pose from corners
+                    val pose = arUcoTransform.estimatePose(corners[i], markerId)
 
-                    // Оценка глубины
-                    val z = 500.0 / width
+                    if (pose != null && isConnected && udpSender != null) {
+                        // Send to SteamVR driver
+                        udpSender?.sendControllerData(
+                            controllerId = pose.controllerId,
+                            quaternion = pose.quaternion,
+                            position = pose.position
+                        )
 
-                    // Отправляем данные
-                    if (isConnected && serverAddress != null) {
-                        sendUdpData(id, centerX, centerY, z)
-                    }
-                }
-
-                // Логируем каждые 30 кадров
-                if (frameCounter % 30 == 0) {
-                    runOnUiThread {
-                        addLogMessage("Detected $markerCount markers")
+                        // Log every 30 detections
+                        if (markerCounts[markerId]!! % 30 == 0) {
+                            val controllerName = if (markerId == 0) "LEFT" else "RIGHT"
+                            addLogMessage(
+                                "$controllerName #${markerCounts[markerId]}: " +
+                                        "Pos(${pose.position[0].format(2)}, " +
+                                        "${pose.position[1].format(2)}, " +
+                                        "${pose.position[2].format(2)}) " +
+                                        "Quat(${pose.quaternion[0].format(2)})"
+                            )
+                        }
                     }
                 }
             }
@@ -524,28 +478,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun sendUdpData(id: Int, x: Double, y: Double, z: Double) {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val data = "$id:${x.toInt()},${y.toInt()},${z.toInt()}".toByteArray()
-                val packet = DatagramPacket(data, data.size, serverAddress, serverPort)
-                udpSocket.send(packet)
-            } catch (e: Exception) {
-                // Игнорируем ошибки отправки
-            }
-        }
-    }
+    private fun Float.format(digits: Int) = "%.${digits}f".format(this)
 
     override fun onPause() {
         super.onPause()
-        processingEnabled = false
         stopBackgroundThread()
         closeCamera()
     }
 
     override fun onResume() {
         super.onResume()
-        processingEnabled = true
         if (textureView.isAvailable) {
             initializeCamera()
         }
@@ -564,6 +506,6 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
         closeCamera()
         stopBackgroundThread()
-        udpSocket.close()
+        udpSender?.close()
     }
 }

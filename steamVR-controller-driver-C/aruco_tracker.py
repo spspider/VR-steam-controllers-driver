@@ -26,6 +26,27 @@ class ArUcoTracker:
         # ArUco словарь и детектор
         self.aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
         self.aruco_params = cv2.aruco.DetectorParameters()
+        # Настройка параметров для скорости
+        self.aruco_params.adaptiveThreshWinSizeMin = 3
+        self.aruco_params.adaptiveThreshWinSizeMax = 23
+        self.aruco_params.adaptiveThreshWinSizeStep = 10
+        self.aruco_params.adaptiveThreshConstant = 7
+        self.aruco_params.minMarkerPerimeterRate = 0.03
+        self.aruco_params.maxMarkerPerimeterRate = 4.0
+        self.aruco_params.polygonalApproxAccuracyRate = 0.05
+        self.aruco_params.minCornerDistanceRate = 0.05
+        self.aruco_params.minDistanceToBorder = 3
+        self.aruco_params.minMarkerDistanceRate = 0.05
+        self.aruco_params.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_NONE  # Важно для скорости
+        self.aruco_params.cornerRefinementWinSize = 5
+        self.aruco_params.cornerRefinementMaxIterations = 30
+        self.aruco_params.cornerRefinementMinAccuracy = 0.1
+        self.aruco_params.markerBorderBits = 1
+        self.aruco_params.perspectiveRemovePixelPerCell = 4
+        self.aruco_params.perspectiveRemoveIgnoredMarginPerCell = 0.13
+        self.aruco_params.maxErroneousBitsInBorderRate = 0.35
+        self.aruco_params.errorCorrectionRate = 0.6
+        self.aruco_params.useAruco3Detection = False
         self.detector = cv2.aruco.ArucoDetector(self.aruco_dict, self.aruco_params)
         
         # Калибровка камеры (примерные значения, замените на свои!)
