@@ -5356,16 +5356,6 @@
 	)
 	(wire
 		(pts
-			(xy 186.69 115.57) (xy 187.96 115.57)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "1514471a-4b64-4bf6-81b5-15414c85d004")
-	)
-	(wire
-		(pts
 			(xy 170.18 71.12) (xy 175.26 71.12)
 		)
 		(stroke
@@ -5403,6 +5393,16 @@
 			(type default)
 		)
 		(uuid "1d0f50f3-e513-48aa-a256-993d735180a8")
+	)
+	(wire
+		(pts
+			(xy 181.61 115.57) (xy 187.96 115.57)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "1ee8862a-3a6b-4b3c-a2c5-17152f1df31e")
 	)
 	(wire
 		(pts
@@ -5963,6 +5963,16 @@
 			(type default)
 		)
 		(uuid "695fa36f-625b-4b40-91fe-bcc4f9612f90")
+	)
+	(wire
+		(pts
+			(xy 181.61 113.03) (xy 181.61 115.57)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "69d4a94e-b499-4149-a6bd-d68860c8ad5a")
 	)
 	(wire
 		(pts
@@ -9123,7 +9133,7 @@
 	)
 	(symbol
 		(lib_id "power:+3.3V")
-		(at 186.69 115.57 0)
+		(at 181.61 113.03 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -9132,7 +9142,7 @@
 		(fields_autoplaced yes)
 		(uuid "501ec100-d0eb-4597-9837-a76471984ba3")
 		(property "Reference" "#PWR022"
-			(at 186.69 119.38 0)
+			(at 181.61 116.84 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9141,7 +9151,7 @@
 			)
 		)
 		(property "Value" "+3.3V"
-			(at 186.69 110.49 0)
+			(at 181.61 107.95 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9149,7 +9159,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 186.69 115.57 0)
+			(at 181.61 113.03 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9158,7 +9168,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 186.69 115.57 0)
+			(at 181.61 113.03 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9167,7 +9177,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
-			(at 186.69 115.57 0)
+			(at 181.61 113.03 0)
 			(effects
 				(font
 					(size 1.27 1.27)

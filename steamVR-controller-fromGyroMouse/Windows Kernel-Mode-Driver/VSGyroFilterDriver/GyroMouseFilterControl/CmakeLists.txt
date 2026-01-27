@@ -1,0 +1,17 @@
+cmake_minimum_required(VERSION 3.10)
+project(GyroMouseFilterControl LANGUAGES C)
+
+add_executable(GyroMouseFilterControl GyroMouseFilterControl.c)
+
+# UNICODE (не обязательно, но можно оставить)
+target_compile_definitions(GyroMouseFilterControl PRIVATE 
+    UNICODE
+    _UNICODE
+)
+
+target_link_libraries(GyroMouseFilterControl PRIVATE 
+    user32
+    kernel32
+    hid
+    setupapi
+)

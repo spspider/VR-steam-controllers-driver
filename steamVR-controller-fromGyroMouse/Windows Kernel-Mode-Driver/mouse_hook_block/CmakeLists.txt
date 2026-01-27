@@ -1,0 +1,18 @@
+cmake_minimum_required(VERSION 3.10)
+project(mouse_hook LANGUAGES CXX)
+
+add_executable(mouse_hook mouse_hook.cpp)
+
+# Enable UNICODE support
+target_compile_definitions(mouse_hook PRIVATE 
+    UNICODE
+    _UNICODE
+)
+
+target_link_libraries(mouse_hook PRIVATE 
+    user32 
+    kernel32 
+    ws2_32
+    hid
+    setupapi
+)

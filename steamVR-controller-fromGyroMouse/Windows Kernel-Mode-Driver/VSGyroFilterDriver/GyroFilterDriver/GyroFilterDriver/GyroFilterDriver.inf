@@ -1,0 +1,78 @@
+;
+; GyroFilterDriver.inf
+; Фильтр-драйвер для блокировки конкретной HID мыши
+;
+
+[Version]
+Signature="$WINDOWS NT$"
+Class=Mouse
+ClassGuid={4D36E96F-E325-11CE-BFC1-08002BE10318}
+Provider=%ManufacturerName%
+CatalogFile=GyroFilterDriver.cat
+DriverVer=01/20/2026,1.0.0.1
+PnpLockdown=1
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+GyroFilterDriver.sys = 1,,
+
+; ================= Install Section ===================
+
+[Manufacturer]
+%ManufacturerName%=Standard,NT$ARCH$
+
+[Standard.NT$ARCH$]
+; VID_2389&PID_00A8 - ваша мышь
+%GyroMouseFilter.DeviceDesc%=GyroMouseFilter_Device, HID\VID_2389&PID_00A8
+
+[GyroMouseFilter_Device.NT]
+CopyFiles=Drivers_Dir
+Include=msmouse.inf
+Needs=HID_Mouse_Inst.NT
+
+[Drivers_Dir]
+GyroFilterDriver.sys
+
+; ================= Service Installation ==============
+
+[GyroMouseFilter_Device.NT.Services]
+Include=msmouse.inf
+Needs=HID_Mouse_Inst.NT.Services
+AddService = GyroMouseFilter,, GyroMouseFilter_Service_Inst
+
+[GyroMouseFilter_Service_Inst]
+DisplayName    = %GyroMouseFilter.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\GyroFilterDriver.sys
+
+; ================= HW Settings =======================
+
+[GyroMouseFilter_Device.NT.HW]
+AddReg=GyroMouseFilter_Device.NT.AddReg
+
+[GyroMouseFilter_Device.NT.AddReg]
+HKR,,"UpperFilters",0x00010000,"GyroMouseFilter"
+
+; ================= WDF Section =======================
+
+[GyroMouseFilter_Device.NT.Wdf]
+KmdfService = GyroMouseFilter, GyroMouseFilter_wdfsect
+
+[GyroMouseFilter_wdfsect]
+KmdfLibraryVersion = 1.15
+
+; ================= Strings ===========================
+
+[Strings]
+ManufacturerName="GyroMouse Filter"
+ClassName="Mouse"
+DiskName = "GyroMouse Filter Installation Disk"
+GyroMouseFilter.DeviceDesc = "Gyroscopic Mouse Filter Driver"
+GyroMouseFilter.SVCDESC = "GyroMouse Filter Service"

@@ -1,0 +1,65 @@
+;
+; GyroMouse Virtual HID Mouse Driver
+;
+
+[Version]
+Signature="$WINDOWS NT$"
+Class=System
+ClassGuid={4D36E97D-E325-11CE-BFC1-08002BE10318}
+Provider=%ManufacturerName%
+CatalogFile=gyromouse.cat
+DriverVer=01/20/2026,1.0.0.1
+PnpLockdown=1
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+VSVirtualDeviceDriver.sys = 1,,
+
+; ================= Install Section ===================
+
+[Manufacturer]
+%ManufacturerName%=Standard,NT$ARCH$
+
+[Standard.NT$ARCH$]
+%GyroMouse.DeviceDesc%=GyroMouse_Device, ROOT\GyroMouse
+
+[GyroMouse_Device.NT]
+CopyFiles=Drivers_Dir
+
+[Drivers_Dir]
+VSVirtualDeviceDriver.sys
+
+; ================= Service Installation ==============
+
+[GyroMouse_Device.NT.Services]
+AddService = GyroMouse,%SPSVCINST_ASSOCSERVICE%, GyroMouse_Service_Inst
+
+[GyroMouse_Service_Inst]
+DisplayName    = %GyroMouse.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\VSVirtualDeviceDriver.sys
+
+; ================= WDF Section =======================
+
+[GyroMouse_Device.NT.Wdf]
+KmdfService = GyroMouse, GyroMouse_wdfsect
+
+[GyroMouse_wdfsect]
+KmdfLibraryVersion = 1.15
+
+; ================= Strings ===========================
+
+[Strings]
+SPSVCINST_ASSOCSERVICE= 0x00000002
+ManufacturerName="GyroMouse"
+ClassName="System"
+DiskName = "GyroMouse Virtual HID Installation Disk"
+GyroMouse.DeviceDesc = "GyroMouse Virtual HID Device"
+GyroMouse.SVCDESC = "GyroMouse Virtual HID Service"

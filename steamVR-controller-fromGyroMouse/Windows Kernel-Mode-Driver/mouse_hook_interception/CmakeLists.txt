@@ -1,0 +1,38 @@
+cmake_minimum_required(VERSION 3.10)
+project(mouse_hook_interception LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Путь к библиотеке Interception
+set(INTERCEPTION_DIR "${CMAKE_SOURCE_DIR}/Interception/library")
+
+add_executable(mouse_hook mouse_hook.cpp)
+
+# Enable UNICODE support
+target_compile_definitions(mouse_hook PRIVATE 
+    UNICODE
+    _UNICODE
+)
+
+# Include directories
+target_include_directories(mouse_hook PRIVATE 
+    "${INTERCEPTION_DIR}"
+)
+
+# Link libraries
+target_link_libraries(mouse_hook PRIVATE 
+    user32 
+    kernel32 
+    ws2_32
+    setupapi
+    "${INTERCEPTION_DIR}/x64/interception.lib"
+)
+
+# Copy DLL to output directory after build
+add_custom_command(TARGET mouse_hook POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${INTERCEPTION_DIR}/x64/interception.dll"
+        $<TARGET_FILE_DIR:mouse_hook>
+    COMMENT "Copying interception.dll to output directory"
+)

@@ -1,0 +1,156 @@
+VSGyroFilterDriver - Структура проекта
+=====================================
+
+Корневая директория:
+├── README.md                          - Краткое резюме проекта
+├── REPORT.md                          - Подробный отчет о проделанной работе
+├── FILTER_DOCUMENTATION.md            - Полная документация по фильтрации
+├── CLI_BUILD_INSTRUCTIONS.md          - Инструкции по компиляции из CLI
+├── PROJECT_STRUCTURE.txt              - Этот файл
+│
+├── driver.c                           - Основной код драйвера
+│   ├── DriverEntry()                  - Точка входа драйвера
+│   ├── GyroMouseEvtDeviceAdd()        - Обработчик добавления устройства
+│   ├── GyroMouseCreateDevice()        - Создание устройства и очереди
+│   ├── GyroMouseFilterMouseData()     - Фильтрация данных мыши
+│   ├── GyroMouseRequestCompletionRoutine() - Обработка завершения запроса
+│   ├── GyroMouseEvtInternalDeviceControl() - Обработка IOCTL команд
+│   └── GyroMouseEvtVhfAsyncOperationComplete() - Обработчик VHF операций
+│
+├── driver.h                           - Заголовочный файл
+│   ├── DEVICE_CONTEXT структура       - Контекст устройства
+│   ├── IOCTL определения              - Определения команд управления
+│   ├── HID_REPORT_DESCRIPTOR          - Дескриптор HID отчета
+│   └── Объявления функций             - Прототипы функций
+│
+├── GyroMouseFilterControl.c           - User-mode приложение управления
+│   ├── OpenDevice()                   - Открытие устройства
+│   ├── EnableFilter()                 - Включение фильтрации
+│   ├── DisableFilter()                - Отключение фильтрации
+│   ├── SetThreshold()                 - Установка порога
+│   ├── BlockInput()                   - Блокировка ввода
+│   ├── UnblockInput()                 - Разблокировка ввода
+│   └── GetInfo()                      - Получение информации
+│
+└── GyroFilterDriver/                  - Папка проекта Visual Studio
+    ├── GyroFilterDriver.sln           - Файл решения
+    │
+    └── GyroFilterDriver/              - Папка проекта
+        ├── GyroFilterDriver.vcxproj   - Файл проекта (обновлен с vhfkm.lib)
+        ├── GyroFilterDriver.vcxproj.filters - Фильтры проекта
+        ├── GyroFilterDriver.inf       - INF файл драйвера
+        │
+        └── x64/                       - Выходные файлы
+            ├── Debug/                 - Debug конфигурация
+            └── Release/               - Release конфигурация
+                ├── GyroFilterDriver.sys - Скомпилированный драйвер
+                ├── GyroFilterDriver/
+                │   └── gyrofilterdriver.cat - Каталог драйвера
+                └── GyroFilterDriver.tlog - Логи компиляции
+
+КЛЮЧЕВЫЕ КОМПОНЕНТЫ
+===================
+
+1. ФИЛЬТРАЦИЯ ПОЗИЦИИ
+   - Фильтрация шума: Игнорирует движения < порога (по умолчанию 5 пикселей)
+   - Сглаживание: Экспоненциальное сглаживание (75% новое, 25% старое)
+
+2. IOCTL КОМАНДЫ
+   - IOCTL_GYRO_SET_BLOCK (0x800)      - Полная блокировка ввода
+   - IOCTL_GYRO_SET_FILTER (0x801)     - Включение/отключение фильтрации
+   - IOCTL_GYRO_SET_THRESHOLD (0x802)  - Установка порога фильтрации
+   - IOCTL_GYRO_GET_INFO (0x803)       - Получение информации об устройстве
+
+3. СТРУКТУРА DEVICE_CONTEXT
+   - BlockInput: BOOLEAN               - Флаг полной блокировки
+   - FilterEnabled: BOOLEAN            - Флаг включения фильтрации
+   - LastX, LastY: LONG                - Значения для сглаживания
+   - FilterThreshold: ULONG            - Порог фильтрации в пикселях
+   - VhfHandle: PVOID                  - Handle для Virtual HID Framework
+
+ПОТОК ОБРАБОТКИ ЗАПРОСА
+=======================
+
+1. User-mode приложение отправляет IOCTL запрос
+2. GyroMouseEvtInternalDeviceControl() получает запрос
+3. Проверяется тип IOCTL команды
+4. Выполняется соответствующее действие (блокировка, фильтрация и т.д.)
+5. Запрос пересылается следующему драйверу в стеке
+6. GyroMouseRequestCompletionRoutine() перехватывает ответ
+7. Применяются алгоритмы фильтрации к данным мыши
+8. Отфильтрованные данные возвращаются user-mode приложению
+
+КОМПИЛЯЦИЯ
+==========
+
+Требования:
+- Visual Studio 2022 Professional
+- Windows Driver Kit (WDK) 10.0.19041.0
+- KMDF (Kernel-Mode Driver Framework)
+
+Команда:
+cd /d "d:\MyDocuments\Programming\Projects_C\VR-Driver\steamVR-controller-fromGyroMouse\Windows Kernel-Mode-Driver\VSGyroFilterDriver\GyroFilterDriver"
+"C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build\vcvars64.bat"
+msbuild GyroFilterDriver.sln /p:Configuration=Release /p:Platform=x64 /v:minimal
+
+Результат:
+x64\Release\GyroFilterDriver.sys - Скомпилированный драйвер
+
+ИСПОЛЬЗОВАНИЕ
+=============
+
+1. Установить драйвер через Device Manager
+2. Запустить GyroMouseFilterControl.exe с нужной командой
+3. Примеры команд:
+   - GyroMouseFilterControl.exe enable-filter
+   - GyroMouseFilterControl.exe set-threshold 10
+   - GyroMouseFilterControl.exe block-input
+
+ОТЛАДКА
+=======
+
+Просмотр отладочных сообщений:
+- Запустить DebugView.exe
+- Сообщения драйвера начинаются с "GyroMouseFilter:"
+
+Примеры сообщений:
+- GyroMouseFilter: DriverEntry
+- GyroMouseFilter: Device fully initialized
+- GyroMouseFilter: Filtered small movement X=2 Y=3
+- GyroMouseFilter: Filtered movement X=15 Y=12
+- GyroMouseFilter: BLOCKED Delta X=0 Y=0
+
+ИЗВЕСТНЫЕ ОГРАНИЧЕНИЯ
+====================
+
+1. VHF интеграция не полностью реализована в текущей версии
+2. Фильтрация работает только для стандартных MOUSE_INPUT_DATA структур
+3. Требуется перезагрузка системы для установки/удаления драйвера
+
+БУДУЩИЕ УЛУЧШЕНИЯ
+=================
+
+1. Полная интеграция с Virtual HID Framework
+2. Поддержка калибровки гироскопа
+3. Адаптивная фильтрация на основе скорости движения
+4. Поддержка различных профилей фильтрации
+5. Логирование данных для анализа
+
+СТАТУС ПРОЕКТА
+==============
+
+✅ Проект успешно скомпилирован
+✅ Все файлы готовы к использованию
+✅ Документация полная
+✅ Примеры кода предоставлены
+✅ Драйвер подписан и готов к установке
+
+ДАТА ПОСЛЕДНЕГО ОБНОВЛЕНИЯ
+===========================
+
+23 января 2026
+
+ВЕРСИЯ
+======
+
+1.0 - Первая версия с поддержкой фильтрации позиции мыши
