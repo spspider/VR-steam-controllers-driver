@@ -12,6 +12,11 @@ A custom VR controller driver for SteamVR that receives UDP data from external c
 
 ### Installation
 
+## YOU HAVE DIFFERENT OPTIONS HOW TO RUN THIS USING DEVICES WHICH YOU HAVE
+1. Using you own webcamera
+2. Using your Android phone
+
+
 #### Option 1: Use Pre-built Release (Recommended)
 1. Download the latest release from [Releases](../../releases)
 2. Extract files to a temporary folder

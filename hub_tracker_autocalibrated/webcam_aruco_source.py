@@ -235,7 +235,7 @@ class WebcamArucoSource:
                             continue
                         
                         # Estimate pose using solvePnP
-                        position, quaternion = self._estimate_marker_pose(corners[i])
+                        position, quaternion, rvec, tvec = self._estimate_marker_pose(corners[i])
                         
                         if position is not None and quaternion is not None:
                             # Update marker data
@@ -251,9 +251,8 @@ class WebcamArucoSource:
                             
                             # Draw marker for visualization
                             if self.show_debug_window:
-                                cv2.drawFrameAxes(frame, self.camera_matrix, self.dist_coeffs,
-                                                np.array([quaternion[1], quaternion[2], quaternion[3]]),  # rvec approximation
-                                                np.array(position), 0.03)
+                                cv2.drawFrameAxes(frame, self.camera_matrix, self.dist_coeffs, 
+                                    rvec, tvec, 0.03)
                     
                     # Draw all detected markers
                     if self.show_debug_window:
@@ -287,7 +286,7 @@ class WebcamArucoSource:
         
         self.log("ArUco detection loop stopped")
     
-    def _estimate_marker_pose(self, marker_corners) -> Tuple[Optional[List[float]], Optional[List[float]]]:
+    def _estimate_marker_pose(self, marker_corners) -> Tuple[Optional[List[float]], Optional[List[float]], Optional[np.ndarray], Optional[np.ndarray]]:
         """
         Estimate 6DOF pose of ArUco marker using solvePnP
         
@@ -295,7 +294,7 @@ class WebcamArucoSource:
             marker_corners: 4 corner points of detected marker in image coordinates
             
         Returns:
-            Tuple of (position [X, Y, Z], quaternion [W, X, Y, Z]) or (None, None) if estimation fails
+            Tuple of (position [X, Y, Z], quaternion [W, X, Y, Z], rvec, tvec) or (None, None, None, None) if estimation fails
         """
         try:
             # Define 3D coordinates of marker corners in marker's coordinate system
@@ -319,7 +318,7 @@ class WebcamArucoSource:
             )
             
             if not success:
-                return None, None
+                return None, None, None, None
             
             # Convert translation vector to position in VR coordinate system
             # OpenCV camera coordinates: X right, Y down, Z forward (away from camera)
@@ -347,11 +346,11 @@ class WebcamArucoSource:
                 float(quat_xyzw[2])   # Z
             ]
             
-            return position, quaternion
+            return position, quaternion, rvec, tvec
             
         except Exception as e:
             self.log(f"Pose estimation error: {e}", "ERROR")
-            return None, None
+            return None, None, None, None
     
     def _draw_debug_info(self, frame):
         """Draw debug information overlay on camera frame"""
@@ -443,9 +442,8 @@ class WebcamArucoSource:
         controller.aruco_quaternion = data['quaternion']
         controller.aruco_last_update = data['timestamp']
         
-        # Mark source as webcam
-        if controller.source != "android":  # Don't override if Android is active
-            controller.source = "webcam"
+        # Mark source as webcam with camera index for debugging
+        controller.source = f"webcam:cam{self.camera_index}"
         
         return True
     

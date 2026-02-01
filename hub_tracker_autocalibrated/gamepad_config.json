@@ -1,0 +1,25 @@
+{
+  "left_controller": {
+    "gamepad_index": null,
+    "button_map": {},
+    "axis_map": {}
+  },
+  "right_controller": {
+    "gamepad_index": 0,
+    "button_map": {
+      "0": "button_a",
+      "1": "button_b",
+      "2": "button_x",
+      "3": "button_y",
+      "4": "grip_click",
+      "5": "trigger_click",
+      "6": "menu_click",
+      "7": "system_click",
+      "8": "trackpad_click",
+      "9": "trackpad_click"
+    },
+    "axis_map": {
+      "2": "trigger_value"
+    }
+  }
+}

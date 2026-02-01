@@ -40,9 +40,9 @@
   },
   "1": {
     "position_offset": [
-      0.0,
-      1.0,
-      0.0
+      -0.25,
+      0.7,
+      -0.47
     ],
     "position_scale": [
       1.0,
@@ -116,19 +116,143 @@
       0.0
     ]
   },
+  "webcam_calibration": {
+    "0": {
+      "position_offset": [
+        -0.1,
+        0.96,
+        -0.36
+      ],
+      "position_scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "axis_invert": [
+        false,
+        false,
+        false
+      ],
+      "rotation_invert": [
+        true,
+        true,
+        false
+      ],
+      "rotation_offset_quat": [
+        0.5954474594816146,
+        -0.45929034982952277,
+        -0.561626858676621,
+        -0.3450651665459679
+      ],
+      "calibration_reference_position": [
+        0.10887387524961252,
+        -0.24194545857708366,
+        -0.9853139279955833
+      ],
+      "calibration_reference_rotation": [
+        0.1125888099832015,
+        0.6860600078775322,
+        -0.6749837296430707,
+        0.2470675822012613
+      ]
+    },
+    "1": {
+      "position_offset": [
+        0.19,
+        0.91,
+        -0.66
+      ],
+      "position_scale": [
+        1.1,
+        1.1,
+        1.01
+      ],
+      "axis_invert": [
+        false,
+        false,
+        false
+      ],
+      "rotation_invert": [
+        true,
+        true,
+        false
+      ],
+      "rotation_offset_quat": [
+        0.6331026379870026,
+        -0.37202818655733544,
+        -0.635265841339825,
+        -0.23919320435071545
+      ],
+      "calibration_reference_position": [
+        0.1384715619971858,
+        -0.1428828370507017,
+        -1.0193896538891385
+      ],
+      "calibration_reference_rotation": [
+        0.12789228015324514,
+        0.7147278175021461,
+        -0.653042572950881,
+        0.21527449797761966
+      ]
+    },
+    "2": {
+      "position_offset": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "position_scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "axis_invert": [
+        false,
+        false,
+        false
+      ],
+      "rotation_invert": [
+        false,
+        false,
+        false
+      ],
+      "rotation_offset_quat": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "calibration_reference_position": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "calibration_reference_rotation": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  },
   "source_config": {
-    "mode": "android_only",
+    "mode": "webcam_only",
     "webcam_camera_index": 0,
     "webcam_resolution": [
       640,
       480
     ],
-    "webcam_marker_size": 0.05,
     "webcam_show_debug": true,
     "source_priority": {
       "0": "android",
       "1": "android",
       "2": "webcam"
     }
+  },
+  "general_settings": {
+    "marker_size": 0.066,
+    "left_controller_id": 0,
+    "right_controller_id": 1,
+    "hmd_controller_id": 2
   }
 }
