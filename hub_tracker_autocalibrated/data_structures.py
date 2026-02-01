@@ -71,6 +71,34 @@ class CalibrationData:
     axis_invert: List[bool] = field(default_factory=lambda: [False, False, False])
     """Инверсия направления оси [X, Y, Z] если система координат противоположна"""
     
+    rotation_invert: List[bool] = field(default_factory=lambda: [False, False, False])
+    """
+    Per-axis inversion of the ORIENTATION quaternion [X, Y, Z].
+    
+    Why this exists:
+      The phone camera can be mounted facing the user OR away from the user.
+      When the camera flips, the ArUco frame flips with it — rotations that
+      were clockwise become counter-clockwise in certain axes.
+      Auto-calibration fixes POSITION via rotation_offset_quat, but the
+      orientation conjugation  (rot * relative * conj(rot))  preserves the
+      handedness of each rotation axis.  If the camera is on the "wrong" side,
+      some axes come out inverted.
+    
+    How it works:
+      After the world-frame quaternion [W, X, Y, Z] is computed, each
+      component X / Y / Z whose flag is True gets its sign flipped.
+      Negating quaternion component X reverses the rotation around the X-axis,
+      and likewise for Y and Z.  W is never touched.
+    
+    Typical scenario:
+      Marker lying flat on a table, phone looking DOWN at it.
+      CW rotation of the marker → ArUco reports CW around camera-Z.
+      If camera-Z maps to world +Z the VR hand spins CW  — correct.
+      If the phone is flipped (camera looks UP), camera-Z maps to world −Z,
+      so the VR hand spins CCW  — wrong.  Enabling rotation_invert[2] (Z)
+      flips it back.
+    """
+    
     rotation_offset_quat: List[float] = field(default_factory=lambda: [1.0, 0.0, 0.0, 0.0])
     """Базовое вращение сохраненное при калибровке вращения [W, X, Y, Z]"""
     

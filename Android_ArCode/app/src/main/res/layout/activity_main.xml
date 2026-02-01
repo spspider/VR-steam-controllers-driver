@@ -6,7 +6,10 @@
     android:layout_height="match_parent"
     android:background="#000000">
 
-    <!-- Full-screen camera view -->
+    <!-- Full-screen camera preview.
+         The TextureView fills the entire screen.  A Matrix transform is applied
+         at runtime (see fixPreviewAspectRatio() in MainActivity) to correct the
+         aspect ratio so the image is never stretched. -->
     <TextureView
         android:id="@+id/texture_view"
         android:layout_width="0dp"
@@ -16,7 +19,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Status overlay at top -->
+    <!-- ── Status bar (top) ──────────────────────────────────────────────── -->
     <LinearLayout
         android:id="@+id/statusPanel"
         android:layout_width="0dp"
@@ -29,6 +32,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
+        <!-- Live frame / marker counter updated every detection cycle -->
         <TextView
             android:id="@+id/statusTextView"
             android:layout_width="match_parent"
@@ -40,7 +44,7 @@
             android:fontFamily="monospace" />
     </LinearLayout>
 
-    <!-- Log window (top-right, scrollable) -->
+    <!-- ── Log window (top-right, scrollable) ────────────────────────────── -->
     <ScrollView
         android:id="@+id/logScrollView"
         android:layout_width="0dp"
@@ -62,7 +66,7 @@
             android:fontFamily="monospace" />
     </ScrollView>
 
-    <!-- Control panel at bottom -->
+    <!-- ── Bottom control panel ──────────────────────────────────────────── -->
     <LinearLayout
         android:id="@+id/controlPanel"
         android:layout_width="0dp"
@@ -74,7 +78,35 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- IP Address input row -->
+        <!-- Camera selector row.
+             Spinner is populated at runtime with all available cameras.
+             Labels include facing direction and field-of-view when reported
+             by the device (e.g. "Camera 0 — back (FoV 78.0°)"). -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Camera:"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:layout_marginEnd="8dp" />
+
+            <!-- Spinner items are added programmatically in populateCameraSpinner() -->
+            <Spinner
+                android:id="@+id/cameraSpinner"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:backgroundTint="#FFFFFF" />
+        </LinearLayout>
+
+        <!-- IP Address + Connect row -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -112,41 +144,23 @@
                 android:backgroundTint="#0088FF" />
         </LinearLayout>
 
-        <!-- Calibration buttons row -->
-        <LinearLayout
+        <!-- Exit button — calls shutdownAndExit() for graceful teardown -->
+        <Button
+            android:id="@+id/exitButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
             android:layout_marginTop="8dp"
-            android:gravity="center">
+            android:text="Exit"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:backgroundTint="#CC0000" />
 
-            <Button
-                android:id="@+id/calibrateButton"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginEnd="4dp"
-                android:text="Calibrate"
-                android:textSize="12sp"
-                android:backgroundTint="#FF8800" />
-
-            <Button
-                android:id="@+id/resetCalibButton"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="4dp"
-                android:text="Reset Calib"
-                android:textSize="12sp"
-                android:backgroundTint="#FF0000" />
-        </LinearLayout>
-
-        <!-- Info text -->
+        <!-- Static hint text -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Detecting ArUco markers (ID 0=Left, 1=Right)\nSending to SteamVR driver on port 5555"
+            android:layout_marginTop="6dp"
+            android:text="Detecting ArUco markers: ID 0 = Left, ID 1 = Right, ID 2 = HMD"
             android:textColor="#AAAAAA"
             android:textSize="10sp"
             android:gravity="center" />

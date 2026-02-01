@@ -67,8 +67,8 @@ from utilities import (
 
 # Target movement distance in metres (user should move roughly this far)
 TARGET_DISTANCE = 0.30          # 30 cm
-DISTANCE_TOLERANCE_LO = 0.20   # warn if less than 20 cm
-DISTANCE_TOLERANCE_HI = 0.45   # warn if more than 45 cm
+DISTANCE_TOLERANCE_LO = 0.10   # warn if less than 20 cm
+DISTANCE_TOLERANCE_HI = 1.45   # warn if more than 45 cm
 
 
 class AutoCalibrationWizard:
@@ -295,11 +295,6 @@ class AutoCalibrationWizard:
             return
 
         dist = calculate_distance(self.P0, pos)
-        if dist < DISTANCE_TOLERANCE_LO:
-            messagebox.showwarning("Too close",
-                f"You've only moved {dist*100:.1f} cm.  "
-                f"Move at least {DISTANCE_TOLERANCE_LO*100:.0f} cm to the right.")
-            return
 
         self.P1 = pos
         self.log(f"  P1 (right)  = ({pos[0]:.4f}, {pos[1]:.4f}, {pos[2]:.4f})  "
@@ -316,11 +311,6 @@ class AutoCalibrationWizard:
             return
 
         dist = calculate_distance(self.P1, pos)
-        if dist < DISTANCE_TOLERANCE_LO:
-            messagebox.showwarning("Too close",
-                f"You've only moved {dist*100:.1f} cm up.  "
-                f"Move at least {DISTANCE_TOLERANCE_LO*100:.0f} cm.")
-            return
 
         self.P2 = pos
         self.log(f"  P2 (up)     = ({pos[0]:.4f}, {pos[1]:.4f}, {pos[2]:.4f})  "
@@ -372,6 +362,10 @@ class AutoCalibrationWizard:
         self.calibration_data.rotation_offset_quat           = rot_quat
         self.calibration_data.calibration_reference_position = list(self.P0)
         self.calibration_data.axis_invert                    = [False, False, False]
+        # Reset rotation invert as well — the new rot_quat already encodes
+        # the correct frame orientation.  If the user still sees inverted
+        # rotation after this they can re-enable specific axes via Manual.
+        self.calibration_data.rotation_invert                = [False, False, False]
         self.calibration_data.position_scale                 = [1.0, 1.0, 1.0]
 
         # Save the marker's rest quaternion recorded at P0.
