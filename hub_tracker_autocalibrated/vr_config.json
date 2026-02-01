@@ -1,0 +1,104 @@
+{
+  "0": {
+    "position_offset": [
+      0.0,
+      1.0,
+      0.0
+    ],
+    "position_scale": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "axis_invert": [
+      false,
+      false,
+      false
+    ],
+    "rotation_offset_quat": [
+      -0.4617520326879435,
+      0.18272436804426956,
+      0.7764826212165553,
+      0.38790669571437175
+    ],
+    "calibration_reference_position": [
+      0.003951028920710087,
+      -0.5214295387268066,
+      -6.239477157592773
+    ],
+    "calibration_reference_rotation": [
+      0.09563720226287842,
+      0.31710436940193176,
+      0.9131419062614441,
+      -0.23763468861579895
+    ]
+  },
+  "1": {
+    "position_offset": [
+      0.0,
+      1.0,
+      0.0
+    ],
+    "position_scale": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "axis_invert": [
+      false,
+      false,
+      false
+    ],
+    "rotation_offset_quat": [
+      -0.47546154912413324,
+      0.1507186517025358,
+      0.7453472299911384,
+      0.44235473330573294
+    ],
+    "calibration_reference_position": [
+      0.00017794141604099423,
+      -0.43322914838790894,
+      -6.345908164978027
+    ],
+    "calibration_reference_rotation": [
+      0.11701969802379608,
+      0.29942265152931213,
+      0.9206125736236572,
+      -0.22164154052734375
+    ]
+  },
+  "2": {
+    "position_offset": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "position_scale": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "axis_invert": [
+      false,
+      false,
+      false
+    ],
+    "rotation_offset_quat": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "calibration_reference_position": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "calibration_reference_rotation": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+    ]
+  }
+}

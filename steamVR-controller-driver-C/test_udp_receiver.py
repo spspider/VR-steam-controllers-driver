@@ -4,7 +4,7 @@ import struct
 
 # Test UDP receiver to verify simulator is working
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-sock.bind(('127.0.0.1', 5556))  # Different port to avoid conflict
+sock.bind(('127.0.0.1', 5555))  # Different port to avoid conflict
 sock.settimeout(1.0)
 
 print("UDP test receiver listening on port 5556...")

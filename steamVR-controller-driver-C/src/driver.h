@@ -15,10 +15,10 @@
 // Структура данных от Arduino контроллера
 #pragma pack(push, 1)
 struct ControllerData {
-    uint8_t controller_id;      // 0 = левый, 1 = правый
+    uint8_t controller_id;      // 0 = левый, 1 = правый, 2 = HMD
     uint32_t packet_number;     // Номер пакета
     float quat_w, quat_x, quat_y, quat_z;  // Кватернион
-    float accel_x, accel_y, accel_z;       // Ускорение
+    float accel_x, accel_y, accel_z;       // ПОЗИЦИЯ (не ускорение!)
     float gyro_x, gyro_y, gyro_z;          // Угловая скорость
     uint16_t buttons;           // Флаги кнопок
     uint8_t trigger;            // Значение триггера
@@ -64,6 +64,35 @@ private:
     // [2] = application_menu
     // [3] = system
     // [4] = trigger_value (аналоговое значение)
+    
+    std::chrono::steady_clock::time_point m_lastUpdateTime;
+};
+
+class CVHeadset : public vr::ITrackedDeviceServerDriver {
+public:
+    CVHeadset();
+    virtual ~CVHeadset() = default;
+    
+    // ITrackedDeviceServerDriver методы
+    virtual vr::EVRInitError Activate(uint32_t unObjectId) override;
+    virtual void Deactivate() override;
+    virtual void EnterStandby() override;
+    virtual void* GetComponent(const char* pchComponentNameAndVersion) override;
+    virtual void DebugRequest(const char* pchRequest, char* pchResponseBuffer, uint32_t unResponseBufferSize) override;
+    virtual vr::DriverPose_t GetPose() override;
+    
+    // Наши методы
+    void UpdateFromNetwork(const ControllerData& data);
+    void CheckConnection();
+    void RunFrame();
+    
+private:
+    vr::TrackedDeviceIndex_t m_unObjectId;
+    std::string m_sSerialNumber;
+    std::string m_sModelNumber;
+    
+    std::mutex m_poseMutex;
+    vr::DriverPose_t m_pose;
     
     std::chrono::steady_clock::time_point m_lastUpdateTime;
 };

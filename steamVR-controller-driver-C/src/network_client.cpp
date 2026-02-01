@@ -37,7 +37,7 @@ bool NetworkClient::Start() {
         return false;
     }
     
-    // Установим неблокирующий режим
+    // Устанавливаем неблокирующий режим
     u_long mode = 1;
     ioctlsocket(socket, FIONBIO, &mode);
     

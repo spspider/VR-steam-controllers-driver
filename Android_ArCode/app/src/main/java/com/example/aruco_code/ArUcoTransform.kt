@@ -7,6 +7,10 @@ import kotlin.math.*
 
 /**
  * Transforms ArUco marker detection data into SteamVR controller pose data
+ * Поддерживает:
+ * - ID 0: Левый контроллер
+ * - ID 1: Правый контроллер
+ * - ID 2: HMD (шлем)
  */
 class ArUcoTransform {
 
@@ -22,17 +26,25 @@ class ArUcoTransform {
     // Marker size in meters (5cm = 0.05m)
     private val markerSize = 0.05
 
-    // Calibration data
+    // Calibration data (отдельная для каждого маркера)
     data class Calibration(
         var positionOffsetX: Double = 0.0,
         var positionOffsetY: Double = 0.0,
         var positionOffsetZ: Double = 0.0,
         var positionScaleX: Double = 5.0,
         var positionScaleY: Double = 5.0,
-        var positionScaleZ: Double = 5.0
+        var positionScaleZ: Double = 5.0,
+        var rotationOffsetX: Double = 0.0,
+        var rotationOffsetY: Double = 0.0,
+        var rotationOffsetZ: Double = 0.0
     )
 
-    private val calibration = Calibration()
+    // Отдельная калибровка для каждого маркера
+    private val calibrations = mutableMapOf(
+        0 to Calibration(),  // LEFT controller
+        1 to Calibration(),  // RIGHT controller
+        2 to Calibration()   // HMD
+    )
 
     /**
      * Controller pose data
@@ -121,7 +133,7 @@ class ArUcoTransform {
             val quaternion = rotationVectorToQuaternion(rvec)
 
             // Apply calibration
-            position = applyCalibration(position)
+            position = applyCalibration(position, markerId)
 
             Log.d("ArUcoTransform", "Marker $markerId - Pos: (${position[0]}, ${position[1]}, ${position[2]})")
 
@@ -172,13 +184,15 @@ class ArUcoTransform {
     }
 
     /**
-     * Apply calibration to position
+     * Apply calibration to position (per-marker)
      */
-    private fun applyCalibration(position: FloatArray): FloatArray {
+    private fun applyCalibration(position: FloatArray, markerId: Int): FloatArray {
+        val calib = calibrations[markerId] ?: calibrations[0]!!
+        
         return floatArrayOf(
-            (position[0] * calibration.positionScaleX + calibration.positionOffsetX).toFloat(),
-            (position[1] * calibration.positionScaleY + calibration.positionOffsetY).toFloat(),
-            (position[2] * calibration.positionScaleZ + calibration.positionOffsetZ).toFloat()
+            (position[0] * calib.positionScaleX + calib.positionOffsetX).toFloat(),
+            (position[1] * calib.positionScaleY + calib.positionOffsetY).toFloat(),
+            (position[2] * calib.positionScaleZ + calib.positionOffsetZ).toFloat()
         )
     }
 
@@ -195,36 +209,96 @@ class ArUcoTransform {
     }
 
     /**
-     * Set calibration offset (call when pressing calibrate button)
+     * Set calibration offset for specific marker (call when pressing calibrate button)
      */
-    fun calibratePosition(currentPosition: FloatArray) {
-        calibration.positionOffsetX = -currentPosition[0].toDouble()
-        calibration.positionOffsetY = -currentPosition[1].toDouble()
-        calibration.positionOffsetZ = -currentPosition[2].toDouble()
+    fun calibratePosition(currentPosition: FloatArray, markerId: Int) {
+        val calib = calibrations[markerId] ?: return
+        calib.positionOffsetX = -currentPosition[0].toDouble()
+        calib.positionOffsetY = -currentPosition[1].toDouble()
+        calib.positionOffsetZ = -currentPosition[2].toDouble()
+        
+        val markerName = when (markerId) {
+            0 -> "LEFT"
+            1 -> "RIGHT"
+            2 -> "HMD"
+            else -> "UNKNOWN"
+        }
+        Log.i("ArUcoTransform", "Calibrated $markerName at (${currentPosition[0]}, ${currentPosition[1]}, ${currentPosition[2]})")
     }
 
     /**
-     * Reset calibration to defaults
+     * Reset calibration to defaults for all markers
      */
     fun resetCalibration() {
-        calibration.positionOffsetX = 0.0
-        calibration.positionOffsetY = 0.0
-        calibration.positionOffsetZ = 0.0
-        calibration.positionScaleX = 5.0
-        calibration.positionScaleY = 5.0
-        calibration.positionScaleZ = 5.0
+        calibrations.forEach { (_, calib) ->
+            calib.positionOffsetX = 0.0
+            calib.positionOffsetY = 0.0
+            calib.positionOffsetZ = 0.0
+            calib.positionScaleX = 5.0
+            calib.positionScaleY = 5.0
+            calib.positionScaleZ = 5.0
+            calib.rotationOffsetX = 0.0
+            calib.rotationOffsetY = 0.0
+            calib.rotationOffsetZ = 0.0
+        }
+    }
+
+    /**
+     * Reset calibration for specific marker
+     */
+    fun resetCalibration(markerId: Int) {
+        val calib = calibrations[markerId] ?: return
+        calib.positionOffsetX = 0.0
+        calib.positionOffsetY = 0.0
+        calib.positionOffsetZ = 0.0
+        calib.positionScaleX = 5.0
+        calib.positionScaleY = 5.0
+        calib.positionScaleZ = 5.0
+        calib.rotationOffsetX = 0.0
+        calib.rotationOffsetY = 0.0
+        calib.rotationOffsetZ = 0.0
     }
 
     /**
      * Get current calibration as string for display
      */
     fun getCalibrationInfo(): String {
-        return "Offset: (${calibration.positionOffsetX.format(2)}, " +
-                "${calibration.positionOffsetY.format(2)}, " +
-                "${calibration.positionOffsetZ.format(2)})\n" +
-                "Scale: (${calibration.positionScaleX.format(2)}, " +
-                "${calibration.positionScaleY.format(2)}, " +
-                "${calibration.positionScaleZ.format(2)})"
+        return buildString {
+            calibrations.forEach { (markerId, calib) ->
+                val markerName = when (markerId) {
+                    0 -> "LEFT"
+                    1 -> "RIGHT"
+                    2 -> "HMD"
+                    else -> "UNKNOWN"
+                }
+                append("$markerName: ")
+                append("Offset(${calib.positionOffsetX.format(2)}, ")
+                append("${calib.positionOffsetY.format(2)}, ")
+                append("${calib.positionOffsetZ.format(2)}) ")
+                append("Scale(${calib.positionScaleX.format(2)}, ")
+                append("${calib.positionScaleY.format(2)}, ")
+                append("${calib.positionScaleZ.format(2)})\n")
+            }
+        }
+    }
+
+    /**
+     * Get calibration for specific marker
+     */
+    fun getCalibrationInfo(markerId: Int): String {
+        val calib = calibrations[markerId] ?: return "No calibration for marker $markerId"
+        val markerName = when (markerId) {
+            0 -> "LEFT"
+            1 -> "RIGHT"
+            2 -> "HMD"
+            else -> "UNKNOWN"
+        }
+        return "$markerName: Offset(${calib.positionOffsetX.format(2)}, " +
+                "${calib.positionOffsetY.format(2)}, " +
+                "${calib.positionOffsetZ.format(2)}) " +
+                "Scale(${calib.positionScaleX.format(2)}, " +
+                "${calib.positionScaleY.format(2)}, " +
+                "${calib.positionScaleZ.format(2)})"
     }
 
     private fun Double.format(digits: Int) = "%.${digits}f".format(this)

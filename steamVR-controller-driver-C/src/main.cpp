@@ -10,7 +10,7 @@ using namespace vr;
 
 class CVDriver : public IServerTrackedDeviceProvider {
 public:
-    CVDriver() : m_networkClient(nullptr) {}
+    CVDriver() : m_networkClient(nullptr), m_headset(nullptr) {}
     
     virtual ~CVDriver() {
         Cleanup();
@@ -19,7 +19,20 @@ public:
     virtual vr::EVRInitError Init(vr::IVRDriverContext* pDriverContext) override {
         VR_INIT_SERVER_DRIVER_CONTEXT(pDriverContext);
         
-        VRDriverLog()->Log("=== CVDriver v2.1 INIT START ===");
+        VRDriverLog()->Log("=== CVDriver v2.2 INIT START ===");
+        
+        // Create HMD
+        m_headset = std::make_unique<CVHeadset>();
+        bool hmdAdded = VRServerDriverHost()->TrackedDeviceAdded(
+            "CV_HMD", 
+            TrackedDeviceClass_HMD,
+            m_headset.get());
+        
+        if (!hmdAdded) {
+            VRDriverLog()->Log("CVDriver: Failed to add HMD!");
+        } else {
+            VRDriverLog()->Log("CVDriver: HMD registered successfully");
+        }
         
         // Create controllers
         m_leftController = std::make_unique<CVController>(
@@ -58,7 +71,7 @@ public:
         m_running = true;
         m_networkThread = std::thread(&CVDriver::NetworkThread, this);
         
-        VRDriverLog()->Log("=== CVDriver v2.1 INIT SUCCESS ===");
+        VRDriverLog()->Log("=== CVDriver v2.2 INIT SUCCESS ===");
         return VRInitError_None;
     }
     
@@ -75,6 +88,10 @@ public:
             m_networkClient.reset();
         }
         
+        m_headset.reset();
+        m_leftController.reset();
+        m_rightController.reset();
+        
         VRDriverLog()->Log("CVDriver: Cleanup complete");
     }
     
@@ -84,7 +101,12 @@ public:
     
     virtual void RunFrame() override {
         // CRITICAL: This is called every frame by SteamVR
-        // We must update controller poses here!
+        // We must update all device poses here!
+        if (m_headset) {
+            m_headset->CheckConnection();
+            m_headset->RunFrame();
+        }
+        
         if (m_leftController) {
             m_leftController->CheckConnection();
             m_leftController->RunFrame();
@@ -113,19 +135,22 @@ private:
                 if (logCounter % 1000 == 0) {
                     char logMsg[256];
                     snprintf(logMsg, sizeof(logMsg), 
-                        "CVDriver: Packet %u from controller %d - Quat(%.2f,%.2f,%.2f,%.2f)", 
+                        "CVDriver: Packet %u from device %d - Pos(%.2f,%.2f,%.2f)", 
                         data.packet_number, (int)data.controller_id,
-                        data.quat_w, data.quat_x, data.quat_y, data.quat_z);
+                        data.accel_x, data.accel_y, data.accel_z);
                     VRDriverLog()->Log(logMsg);
                 }
                 logCounter++;
                 
-                // Update corresponding controller
+                // Route data to appropriate device
                 if (data.controller_id == 0 && m_leftController) {
                     m_leftController->UpdateFromArduino(data);
                 } 
                 else if (data.controller_id == 1 && m_rightController) {
                     m_rightController->UpdateFromArduino(data);
+                }
+                else if (data.controller_id == 2 && m_headset) {
+                    m_headset->UpdateFromNetwork(data);
                 }
             }
             
@@ -136,6 +161,7 @@ private:
         VRDriverLog()->Log("CVDriver: Network thread stopped.");
     }
     
+    std::unique_ptr<CVHeadset> m_headset;
     std::unique_ptr<CVController> m_leftController;
     std::unique_ptr<CVController> m_rightController;
     std::unique_ptr<NetworkClient> m_networkClient;

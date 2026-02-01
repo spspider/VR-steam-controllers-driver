@@ -4,3 +4,4 @@ build/
 **/openvr/
 **/build/
 **/.venv/
+**/__pycache__/

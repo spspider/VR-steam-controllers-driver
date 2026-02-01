@@ -14,6 +14,7 @@ import android.util.Log
 import android.util.Size
 import android.view.Surface
 import android.view.TextureView
+import android.view.WindowManager
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -44,6 +45,7 @@ class MainActivity : AppCompatActivity() {
     private var imageReader: ImageReader? = null
     private var backgroundHandler: Handler? = null
     private var backgroundThread: HandlerThread? = null
+    private var cameraInitialized = false
 
     private lateinit var detector: ArucoDetector
     private lateinit var dictionary: Dictionary
@@ -55,6 +57,10 @@ class MainActivity : AppCompatActivity() {
     private val logMessages = mutableListOf<String>()
     private var frameCounter = 0
     private val markerCounts = mutableMapOf<Int, Int>()  // Track detection count per marker
+
+    // Отслеживание последних позиций для каждого маркера
+    private val lastPositions = mutableMapOf<Int, FloatArray>()
+    private val lastQuaternions = mutableMapOf<Int, FloatArray>()
 
     private val requiredPermissions = arrayOf(
         Manifest.permission.CAMERA,
@@ -72,9 +78,10 @@ class MainActivity : AppCompatActivity() {
             val totalMarkers = markerCounts.values.sum()
             val leftCount = markerCounts[0] ?: 0
             val rightCount = markerCounts[1] ?: 0
+            val hmdCount = markerCounts[2] ?: 0
 
             statusTextView.text = "Frames: $frameCounter | Markers: $totalMarkers " +
-                    "(L:$leftCount R:$rightCount)"
+                    "(L:$leftCount R:$rightCount H:$hmdCount)"
         }
     }
 
@@ -147,19 +154,19 @@ class MainActivity : AppCompatActivity() {
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
                         udpSender?.close()
-                        udpSender = ControllerUDPSender(ip, 5555)
+                        udpSender = ControllerUDPSender(ip, 5554)  // Hub port
                         isConnected = true
 
                         runOnUiThread {
-                            Toast.makeText(this@MainActivity, "Connected to $ip:5555", Toast.LENGTH_SHORT).show()
-                            addLogMessage("Connected to $ip:5555 (SteamVR)")
-                            connectButton.text = "Connected"
+                            Toast.makeText(this@MainActivity, "Connected to VR Hub at $ip:5554", Toast.LENGTH_SHORT).show()
+                            addLogMessage("Connected to VR Tracking Hub at $ip:5554")
+                            connectButton.text = "Connected to Hub"
                             connectButton.isEnabled = false
                         }
                     } catch (e: Exception) {
                         runOnUiThread {
                             Toast.makeText(this@MainActivity, "Connection failed: ${e.message}", Toast.LENGTH_SHORT).show()
-                            addLogMessage("Connection failed")
+                            addLogMessage("Hub connection failed")
                         }
                     }
                 }
@@ -180,6 +187,9 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "Calibration reset", Toast.LENGTH_SHORT).show()
         }
 
+        // Keep screen on
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
         // Check and request permissions
         if (checkPermissions()) {
             initializeCamera()
@@ -189,33 +199,41 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initializeCamera() {
+        if (cameraInitialized) return
+        cameraInitialized = true
+
         startBackgroundThread()
 
-        textureView.surfaceTextureListener = object : TextureView.SurfaceTextureListener {
-            override fun onSurfaceTextureAvailable(
-                surface: android.graphics.SurfaceTexture,
-                width: Int,
-                height: Int
-            ) {
-                openCamera(width, height)
+        if (textureView.isAvailable) {
+            openCamera(textureView.width, textureView.height)
+        } else {
+            textureView.surfaceTextureListener = object : TextureView.SurfaceTextureListener {
+                override fun onSurfaceTextureAvailable(
+                    surface: android.graphics.SurfaceTexture,
+                    width: Int,
+                    height: Int
+                ) {
+                    openCamera(width, height)
+                }
+
+                override fun onSurfaceTextureSizeChanged(
+                    surface: android.graphics.SurfaceTexture,
+                    width: Int,
+                    height: Int
+                ) {}
+
+                override fun onSurfaceTextureDestroyed(surface: android.graphics.SurfaceTexture): Boolean {
+                    return true
+                }
+
+                override fun onSurfaceTextureUpdated(surface: android.graphics.SurfaceTexture) {}
             }
-
-            override fun onSurfaceTextureSizeChanged(
-                surface: android.graphics.SurfaceTexture,
-                width: Int,
-                height: Int
-            ) {}
-
-            override fun onSurfaceTextureDestroyed(surface: android.graphics.SurfaceTexture): Boolean {
-                return true
-            }
-
-            override fun onSurfaceTextureUpdated(surface: android.graphics.SurfaceTexture) {}
         }
     }
 
     private fun startBackgroundThread() {
-        backgroundThread = HandlerThread("CameraBackground").also { it.start() }
+        backgroundThread = HandlerThread("CameraBackground")
+        backgroundThread?.start()
         backgroundHandler = Handler(backgroundThread!!.looper)
     }
 
@@ -231,28 +249,35 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun openCamera(width: Int, height: Int) {
-        val cameraManager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
         try {
+            val cameraManager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
             val cameraId = cameraManager.cameraIdList[0]
 
             val characteristics = cameraManager.getCameraCharacteristics(cameraId)
-            val map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
-                ?: throw RuntimeException("Cannot get available preview sizes")
+            val streamConfigMap = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
 
-            val previewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture::class.java), width, height)
-
-            imageReader = ImageReader.newInstance(
-                previewSize.width,
-                previewSize.height,
-                ImageFormat.YUV_420_888,
-                2
-            ).apply {
-                setOnImageAvailableListener({ reader ->
-                    processImage(reader.acquireLatestImage())
-                }, backgroundHandler)
+            val imageDimension: Size = if (streamConfigMap != null) {
+                chooseOptimalSize(
+                    streamConfigMap.getOutputSizes(ImageFormat.YUV_420_888),
+                    width,
+                    height
+                )
+            } else {
+                Size(640, 480)
             }
 
-            textureView.surfaceTexture?.setDefaultBufferSize(previewSize.width, previewSize.height)
+            imageReader = ImageReader.newInstance(
+                imageDimension.width,
+                imageDimension.height,
+                ImageFormat.YUV_420_888,
+                2
+            )
+            imageReader!!.setOnImageAvailableListener({ reader ->
+                val image = reader.acquireLatestImage()
+                if (image != null) {
+                    processImage(image)
+                }
+            }, backgroundHandler)
 
             if (ActivityCompat.checkSelfPermission(
                     this,
@@ -265,17 +290,17 @@ class MainActivity : AppCompatActivity() {
             cameraManager.openCamera(cameraId, object : CameraDevice.StateCallback() {
                 override fun onOpened(camera: CameraDevice) {
                     cameraDevice = camera
-                    addLogMessage("Camera: ${previewSize.width}x${previewSize.height}")
+                    addLogMessage("Camera opened")
                     createCameraPreviewSession()
                 }
 
                 override fun onDisconnected(camera: CameraDevice) {
-                    cameraDevice?.close()
+                    camera.close()
                     cameraDevice = null
                 }
 
                 override fun onError(camera: CameraDevice, error: Int) {
-                    cameraDevice?.close()
+                    camera.close()
                     cameraDevice = null
                     addLogMessage("Camera error: $error")
                 }
@@ -442,28 +467,37 @@ class MainActivity : AppCompatActivity() {
                     ids.get(i, 0, idArray)
                     val markerId = idArray[0]
 
-                    // Only process markers with ID 0 (left) or 1 (right)
-                    if (markerId != 0 && markerId != 1) continue
+                    // Обрабатываем маркеры ID 0 (левый), 1 (правый), 2 (HMD)
+                    if (markerId < 0 || markerId > 2) continue
 
-                    // Track detection count
+                    // Отслеживаем количество обнаружений
                     markerCounts[markerId] = (markerCounts[markerId] ?: 0) + 1
 
-                    // Estimate pose from corners
+                    // Оцениваем позу из углов
                     val pose = arUcoTransform.estimatePose(corners[i], markerId)
 
                     if (pose != null && isConnected && udpSender != null) {
-                        // Send to SteamVR driver
+                        // Сохраняем последнюю позицию/ориентацию
+                        lastPositions[markerId] = pose.position
+                        lastQuaternions[markerId] = pose.quaternion
+
+                        // Отправляем в VR Hub
                         udpSender?.sendControllerData(
                             controllerId = pose.controllerId,
                             quaternion = pose.quaternion,
                             position = pose.position
                         )
 
-                        // Log every 30 detections
+                        // Логируем каждые 30 обнаружений
                         if (markerCounts[markerId]!! % 30 == 0) {
-                            val controllerName = if (markerId == 0) "LEFT" else "RIGHT"
+                            val markerName = when (markerId) {
+                                0 -> "LEFT"
+                                1 -> "RIGHT"
+                                2 -> "HMD"
+                                else -> "UNKNOWN"
+                            }
                             addLogMessage(
-                                "$controllerName #${markerCounts[markerId]}: " +
+                                "$markerName #${markerCounts[markerId]}: " +
                                         "Pos(${pose.position[0].format(2)}, " +
                                         "${pose.position[1].format(2)}, " +
                                         "${pose.position[2].format(2)}) " +
@@ -482,15 +516,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        stopBackgroundThread()
-        closeCamera()
     }
 
     override fun onResume() {
         super.onResume()
-        if (textureView.isAvailable) {
-            initializeCamera()
-        }
     }
 
     private fun closeCamera() {
@@ -507,5 +536,6 @@ class MainActivity : AppCompatActivity() {
         closeCamera()
         stopBackgroundThread()
         udpSender?.close()
+        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 }

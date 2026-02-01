@@ -17,6 +17,7 @@ add_library(driver_cvdriver SHARED
     src/main.cpp
     src/network_client.cpp
     src/controller_device.cpp
+    src/hmd_device_position.cpp
 )
 
 # Link OpenVR

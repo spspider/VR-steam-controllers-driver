@@ -21,6 +21,9 @@ cvdriver/
 ├── CMakeLists.txt
 └── simple_simulator.py
 
+
+openvr download from here https://github.com/ValveSoftware/openvr/releases
+
 ### Step 2: Install the driver manually
 
 1. Save `manual_install.bat` to the project root
@@ -188,3 +191,11 @@ To debug the driver in Visual Studio:
 Create reinstall.bat:
 
 (batch file content here)
+
+#compile:
+
+rm -rf build/
+mkdir build
+cd build
+cmake .. -G "Visual Studio 17 2022" -A x64
+cmake --build . --config Release
